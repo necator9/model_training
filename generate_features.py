@@ -44,12 +44,13 @@ single = False
 single = True
 if single:
     ww, hh, dd = 3, 2, 0
-    cam_a = -20
+    cam_a = -10
     y_rotate = 0
-    x, y, z = [-2, -6, 20]
+    x, y, z = [-1, -1, 15]
 
     rw_system = gf.Handler3DNew(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
-    rw_system.transform((False, np.asarray([ww, hh, dd])), y_rotate, np.asarray([x, y, z]), cam_a)
+    rw_system.transform((False, np.asarray([ww, hh, dd])), np.deg2rad(y_rotate), np.asarray([x, y, z]),
+                        np.deg2rad(cam_a))
 
     gf.plt_2d_projections(rw_system.transformed_vertices)
     mask = gf.plot_mask(rw_system.img_points, faces, 7, scene['img_res'])
@@ -61,14 +62,15 @@ if single:
     c_ar, b_rect = gf.find_basic_params(mask)
     #c_ar, b_rect = np.repeat(c_ar, 2, axis=0), np.repeat(b_rect, 2, axis=0)
 
-    pc = gf.PinholeCam(cam_a, y, scene['img_res'], scene['sens_dim'], scene['f_l'])
+    pc = gf.PinholeCam(np.deg2rad(cam_a), y, np.asarray(scene['img_res']), np.asarray(scene['sens_dim']), scene['f_l'])
 
     PINHOLE_CAM = PinholeCameraModel(rw_angle=cam_a, f_l=scene['f_l'], w_ccd=scene['sens_dim'][0],
                                      h_ccd=scene['sens_dim'][1], img_res=scene['img_res'])
 
     d = [PINHOLE_CAM.pixels_to_distance(y, y_ao + h_ao) for (x, y_ao, w, h_ao) in b_rect]
     w_ao_rw = [PINHOLE_CAM.get_width(y, dd, br) for dd, br in zip(d, b_rect)]
-    print(w_ao_rw, d, 'result old')
+    h_ao_rw = [PINHOLE_CAM.get_height(y, dd, br) for dd, br in zip(d, b_rect)]
+    print(d, w_ao_rw, h_ao_rw, 'result old')
 
     pc.extract_features(b_rect)
 

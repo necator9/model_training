@@ -66,7 +66,7 @@ class PinholeCameraModel(object):
         #print(camera_coords, 'camera_coords')
         camera_coords[1] = -camera_coords[1]  # Some magic
 
-        print(camera_coords)
+        #print(camera_coords)
 
         camera_coords_prime = np.array([np.append(camera_coords, np.array(1))])
         rw_coords = self.e_inv.dot(camera_coords_prime.T)

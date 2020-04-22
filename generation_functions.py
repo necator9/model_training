@@ -149,8 +149,8 @@ class RotationMtx(object):
         self.prev_angle = float()
 
     def build(self, angle):
-        ang = np.deg2rad(angle)
-        self.fill_function(np.sin(ang), np.cos(ang))
+        #ang = np.deg2rad(angle)
+        self.fill_function(np.sin(angle), np.cos(angle))
         return self.mtx
 
     def fill_rx_mtx(self, a_sin, a_cos):
@@ -191,7 +191,6 @@ class Handler3DNew(object):
 
         if self.k_obj is not None:
             self.k_obj.project_to_image()
-
 
 
 def plt_2d_projections(vertices):
@@ -274,131 +273,82 @@ def find_basic_params(mask):
 
 class PinholeCam(object):
     def __init__(self, r_x, cam_h, img_res, sens_dim, f_l):
-        self.r_x = np.deg2rad(r_x)  #  negative
+        self.r_x = r_x  # comes in  radians
         self.cam_h = cam_h # Should be negative
         self.img_res = img_res
         self.sens_dim = sens_dim
         self.f_l = f_l
 
-        self.pixels_to_distance_v = np.vectorize(self.pixels_to_distance)
-        self.distance = None
+        intrinsic_mtx = IntrinsicMtx((self.img_res, self.f_l, self.sens_dim), None, None).mtx
+        self.rev_intrinsic_mtx = np.linalg.inv(intrinsic_mtx[:, :-1])  # Last column is not needed in reverse transf.
 
-    def pixels_to_distance(self, n):
-        #n = self.img_res[1] - n
-        pxlmm = self.sens_dim[1] / self.img_res[1]  # print 'pxlmm ', pxlmm
-        h_px = self.img_res[1] / 2 - n
-        h_mm = h_px * pxlmm  # print 'hmm ', h_mm
-        bo = np.arctan(h_mm / self.f_l)  # print 'bo ', np.rad2deg(bo)
-        deg = abs(self.r_x) + bo
-        tan = np.tan(deg) if deg >= 0 else -1.
-        d = (abs(self.cam_h) / tan)
-        return d
+        rot_x_mtx = RotationMtx('rx', None).build(self.r_x)
+        self.rev_rot_x_mtx = np.linalg.inv(rot_x_mtx)
 
-    def get_intrinsic_matrix(self):
-        w_img, h_img = self.img_res
-        w_ccd, h_ccd = self.sens_dim
+        self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
 
-        fx = self.f_l * w_img / float(w_ccd)
-        fy = self.f_l * h_img / float(h_ccd)
-
-        px = w_img / 2.0
-        py = h_img / 2.0
-
-        k = np.array([[fx, 0, px, 0],
-                      [0, fy, py, 0],
-                      [0, 0, 1, 0]])
-
-        return k
-
-    def get_extrinsic_matrix(self):
-        ang = self.r_x
-        # R_x(angle)
-        r = np.array([[1, 0, 0, 0],
-                      [0, np.cos(ang), -np.sin(ang), 0],
-                      [0, np.sin(ang), np.cos(ang), 0],
-                      [0, 0, 0, 1]])
-
-        return r
+        self.estimate_distance = np.vectorize(self.pixels_to_distance)
 
     def extract_features(self, b_rect):
-        # Reverse the lowest coordinate of bound.rect. along y axis before transformation
+        # Important! Reverse the lowest coordinate of bound.rect. along y axis before transformations
         lowest_y = self.img_res[1] - (b_rect[:, 1] + b_rect[:, 3])
-        self.distance = self.pixels_to_distance_v(lowest_y)
-        print(self.distance)
 
-        self.find_3d_x(b_rect, lowest_y)
+        rw_distance = self.estimate_distance(lowest_y)
 
-    def find_3d_x(self, b_rect, lowest_y):
+        left_bottom, right_bottom = self.estimate_3d_coordinates(b_rect, lowest_y, rw_distance)
+
+        rw_width = np.absolute(left_bottom[:, 0] - right_bottom[:, 0])
+
+        print(rw_distance, left_bottom, right_bottom, rw_width)
+        print(self.estimate_height(rw_distance, b_rect))
+
+    def pixels_to_distance(self, n):
+        pxlmm = self.sens_dim[1] / self.img_res[1]
+        h_px = self.img_res[1] / 2 - n
+        h_mm = h_px * pxlmm
+        bo = np.arctan(h_mm / self.f_l)
+        deg = abs(self.r_x) + bo
+        tan = np.tan(deg) if deg >= 0 else -1.
+        d = abs(self.cam_h) / tan
+        return d
+
+    def estimate_3d_coordinates(self, b_rect, lowest_y, distance):
         # Build a single array from left and right rects' coords to compute within single vectorized transformation
         xlr = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords of bounding rect,
         # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
         xlr_yb_hom = np.vstack((xlr, np.repeat(lowest_y, 2), np.ones(2 * lowest_y.size))).T  #
 
-        z_cam_coords = self.cam_h * np.sin(self.r_x) + self.distance * np.cos(self.r_x)
-        z_cam_coords = np.expand_dims(z_cam_coords, axis=0).T
-        cam_xlr_yb_h = xlr_yb_hom * np.repeat(z_cam_coords, 2, axis=0)
+        # Z cam is a scaling factor which is needed for 3D reconstruction
+        z_cam_coords = self.cam_h * np.sin(self.r_x) + distance * np.cos(self.r_x)
+        z_cam_coords = np.expand_dims(np.repeat(z_cam_coords, 2), axis=0).T
+        cam_xlr_yb_h = xlr_yb_hom * z_cam_coords
 
-        k_inv = np.linalg.inv(self.get_intrinsic_matrix()[:, :-1])
+        # Transform from image plan to camera coordinate system
+        camera_coords = self.rev_intrinsic_mtx @ cam_xlr_yb_h.T
+        camera_coords = np.vstack((camera_coords, np.ones((1, camera_coords.shape[1]))))  # To homogeneous form
 
-        cam_xlr_yb_h = cam_xlr_yb_h.T
-        camera_coords = k_inv @ cam_xlr_yb_h
-        #camera_coords[1] = -camera_coords[1]  # Some magic
+        # Transform from to camera to real world coordinate system
+        rw_coords = self.rev_rot_x_mtx @ camera_coords
 
-        camera_coords = np.vstack((camera_coords, np.ones((1, camera_coords.shape[1]))))
-        print(camera_coords, camera_coords.shape)
+        left_bottom, right_bottom = np.split(rw_coords.T, 2, axis=0)  # Split into left/right vertices
+        # left_bottom = [[ X,  Y,  Z,  1],  #  - The structure of a returning vertices array, where each row is
+        #                [.., .., .., ..]...]    different rectangle. The right_bottom has the same form
+        return left_bottom, right_bottom
 
-        e_inv = np.linalg.inv(self.get_extrinsic_matrix())
+    def estimate_height(self, d, b_rect):
+        pixels_bot_up = np.vstack((b_rect[:, 1], b_rect[:, 1] + b_rect[:, 3])).T
+        h = abs(self.cam_h)
+        hypot = np.hypot(h, d)
+        angles_to_horizon = self.find_angle_to_horizon_line(pixels_bot_up)
 
-        rw_coords = e_inv @ camera_coords
-        print(rw_coords.T)
+        angle_between_pixels = np.absolute(angles_to_horizon[:, 0] - angles_to_horizon[:, 1])
 
+        gamma = np.arctan(d * 1. / h)
+        beta = np.pi - angle_between_pixels - gamma
+        return hypot * np.sin(angle_between_pixels) / np.sin(beta)
 
-
-    # def get_3d_point(self, img_coords, y, z):
-    #     z_cam_coords = (y * np.sin(np.radians(self.rw_angle))) + (z * np.cos(np.radians(self.rw_angle)))
-    #
-    #     img_coords_prime = z_cam_coords * img_coords
-    #
-    #     camera_coords = self.k_inv.dot(img_coords_prime.T)
-    #     camera_coords[1] = -camera_coords[1]  # Some magic
-    #
-    #     camera_coords_prime = np.array([np.append(camera_coords, np.array(1))])
-    #     rw_coords = self.e_inv.dot(camera_coords_prime.T)
-    #
-    #     return rw_coords.T[0]
-
-
-    def calc_width(self, z_rw, b_rect, lowest_y):
-        y_rw = self.cam_h
-
-        br_left_down_2d = np.asarray([b_rect[:, 0], lowest_y, np.ones(lowest_y.shape)]).T
-        br_right_down_2d = np.asarray([b_rect[:, 0] + b_rect[:, 2], lowest_y, np.ones(lowest_y.shape)]).T
-
-        self.get_3d_point(br_left_down_2d)
-
-        # br_left_down_2d = np.array([[x, y + h, 1]])
-        # br_right_down_2d = np.array([x + w, y + h, 1])
-        # br_down_2d = [br_left_down_2d, br_right_down_2d]
-        # br_down_3d = [self.get_3d_point(br_vertex_2d, y_rw, z_rw) for br_vertex_2d in br_down_2d]
-        #
-        # br_left_down_3d = br_down_3d[0][0]
-        # br_right_down_3d = br_down_3d[1][0]
-        # br_x_down_list = [br_left_down_3d, br_right_down_3d]
-        #
-        # br_w_3d = abs(max(br_x_down_list) - min(br_x_down_list))
-
-    def get_width(self, y_rw, z_rw, b_rect):
-        x, y, w, h = b_rect
-
-        br_left_down_2d = np.array([[x, y + h, 1]])
-        br_right_down_2d = np.array([x + w, y + h, 1])
-        br_down_2d = [br_left_down_2d, br_right_down_2d]
-        br_down_3d = [self.get_3d_point(br_vertex_2d, y_rw, z_rw) for br_vertex_2d in br_down_2d]
-
-        br_left_down_3d = br_down_3d[0][0]
-        br_right_down_3d = br_down_3d[1][0]
-        br_x_down_list = [br_left_down_3d, br_right_down_3d]
-
-        br_w_3d = abs(max(br_x_down_list) - min(br_x_down_list))
-
-        return br_w_3d
+    # Find angle between object pixel and central image pixel along y axis
+    def find_angle_to_horizon_line(self, pix):
+        h_px = self.img_res[1] / 2. - pix
+        h_mm = h_px * self.px_h_mm
+        return np.arctan(h_mm / self.f_l)
