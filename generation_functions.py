@@ -76,63 +76,81 @@ def parse_3d_obj_file(path):
     return vertices, faces
 
 
-# Defines interface to transformation matrices
-class TransformMtx(object):
-    def __init__(self, key):
-        self.mtx = None
-        self.args = None
-
-    def build(self, *args):
-        # Fills self.mtx accordingly and return mtx.T
-        pass
-
-    def calculate_offset(self, *args):
-        self.args = args
+# # Defines interface to transformation matrices
+# class TransformMtx(object):
+#     def __init__(self, key):
+#         self.mtx = None
+#
+#     def build(self, *args):
+#         # Fills self.mtx accordingly and return mtx.T
+#         pass
 
 
-class TranslateMtx(TransformMtx):
-    def __init__(self, key):
-        super(TranslateMtx, self).__init__(key)
+class TranslateMtx(object):
+    def __init__(self, key, vertices):
         self.mtx = np.identity(4)
+        self.vertices = vertices
 
-    def build(self, t):
+    def build(self, args):
+        coords = args
+        t = np.asarray(coords) - self.find_principal_point()[:-1]
         self.mtx[:-1, -1] = t
         return self.mtx
 
+    def find_principal_point(self):
+        return np.array([(self.vertices[:, 0].min() + self.vertices[:, 0].max()) / 2,
+                         self.vertices[:, 1].min(), self.vertices[:, 2].min(), 1])
 
 
-class ScaleMtx(TransformMtx):
-    def __init__(self, key):
-        super(ScaleMtx, self).__init__(key)
+class ScaleMtx(object):
+    def __init__(self, key, vertices):
+        self.vertices = vertices
         self.mtx = np.identity(4)
-
-    def build(self, scale):
-        np.fill_diagonal(self.mtx, np.append(scale, 1))
-        return self.mtx
-
-
-class IntrinsicMtx(TransformMtx):
-    def __init__(self, key):
-        super(IntrinsicMtx, self).__init__(key)
-        self.mtx = np.eye(3, 4)
+        self.shape = self.measure_act_shape()
 
     def build(self, args):
-        img_res, f_l, sens_dim = args
-        print(img_res, f_l, sens_dim)
-        np.fill_diagonal(self.mtx, f_l * img_res / sens_dim)
-        self.mtx[:, 2] = np.append(img_res / 2, 1)  # Append 1 to replace old value in mtx after fill_diagonal
+        self.shape = self.measure_act_shape()
+        prop, req_dims = args
+        scale_f = np.asarray(req_dims) / self.shape
+        if prop:
+            scale_f[:] = scale_f.max()
+        else:
+            scale_f[scale_f == 0] = 1
+
+        np.fill_diagonal(self.mtx, np.append(scale_f, 1))
         return self.mtx
 
+    def measure_act_shape(self):
+        return self.vertices[:, :-1].max(axis=0) - self.vertices[:, :-1].min(axis=0)
 
-class RotationMtx(TransformMtx):
-    def __init__(self, key):
-        super(RotationMtx, self).__init__(key)
+
+class IntrinsicMtx(object):
+    def __init__(self, args, vertices, img_points):
+        self.img_res, self.f_l, self.sens_dim = args
+        self.mtx = np.eye(3, 4)
+        np.fill_diagonal(self.mtx, self.f_l * self.img_res / self.sens_dim)
+        self.mtx[:, 2] = np.append(self.img_res / 2, 1)  # Append 1 to replace old value in mtx after fill_diagonal
+
+        self.img_points = img_points
+        self.vertices = vertices
+
+    def project_to_image(self):
+        temp = self.vertices @ self.mtx.T
+        self.img_points[:] = np.asarray([temp[:, 0] / temp[:, 2],
+                                         temp[:, 1] / temp[:, 2]]).T
+        self.img_points[:, 1] = self.img_res[1] - self.img_points[:, 1]  # Reverse along y axis
+
+
+class RotationMtx(object):
+    def __init__(self, key, vertices):
         self.mtx = np.identity(4)
         self.rot_map = {'rx': self.fill_rx_mtx, 'ry': self.fill_ry_mtx, 'rz': self.fill_rz_mtx}
         self.fill_function = self.rot_map[key]
+        self.prev_angle = float()
 
     def build(self, angle):
-        self.fill_function(np.sin(angle), np.cos(angle))
+        ang = np.deg2rad(angle)
+        self.fill_function(np.sin(ang), np.cos(ang))
         return self.mtx
 
     def fill_rx_mtx(self, a_sin, a_cos):
@@ -155,214 +173,25 @@ class RotationMtx(TransformMtx):
 
 
 class Handler3DNew(object):
-    def __init__(self, vert, operations):
+    def __init__(self, vert, operations, k=None):
         self.vertices = vert
-        self.map = {'rx': RotationMtx, 'ry': RotationMtx, 'rz': RotationMtx, 's': ScaleMtx,
-                    't': TranslateMtx, 'k': IntrinsicMtx}
+        self.transformed_vertices = np.copy(self.vertices)
+        self.img_points = np.zeros((self.vertices.shape[0], 2), dtype='int32')
+        self.operations = operations
+        self.mtx_seq = {'rx': RotationMtx, 'ry': RotationMtx, 'rz': RotationMtx, 's': ScaleMtx, 't': TranslateMtx}
 
-        self.mtx_seq = self._construct_sequence(operations)
-        self.img_points = None
+        self.mtx_seq = [self.mtx_seq[op](op, self.transformed_vertices) for op in self.operations]  # Create instances of matrices
 
-    def _construct_sequence(self, operations):
-        return [self.map[op](op) for op in operations]  # Create instances of matrices
+        self.k_obj = IntrinsicMtx(k, self.transformed_vertices, self.img_points) if k is not None else None
 
-    def transform(self, *args):
-        mtx_list = [mtx.build(arg).T for mtx, arg in zip(self.mtx_seq, args)]
-        if IntrinsicMtx in self.mtx_seq:
-            intr_idx = self.mtx_seq.index(IntrinsicMtx)
-            intrinsic_mtx = mtx_list.pop(intr_idx)
-            self.vertices = np.linalg.multi_dot([self.vertices] + mtx_list)
-            self.img_points = self.vertices @ intrinsic_mtx
-            self.img_points = np.asarray([self.img_points[:, 0] / self.img_points[:, 2],
-                                          self.img_points[:, 1] / self.img_points[:, 2]], dtype='int32').T
-            # args[intr_idx][0][1] is the image height
-            self.img_points[:, 1] = args[intr_idx][0][1] - self.img_points[:, 1]  # Reverse along y axis
-        else:
-            print(mtx_list)
-            # for mtx in mtx_list:
-            #     self.vertices = self.vertices @ mtx
-            self.vertices = np.linalg.multi_dot([self.vertices] + mtx_list)
+    def transform(self,  *args):
+        self.transformed_vertices[:] = np.copy(self.vertices)
+        for mtx, arg in zip(self.mtx_seq, args):
+            self.transformed_vertices[:] = self.transformed_vertices @ mtx.build(arg).T
 
+        if self.k_obj is not None:
+            self.k_obj.project_to_image()
 
-class OffsetTracker(object):
-    def __init__(self, vertices):
-        self.vertices = np.asarray(vertices)
-        self.principal_point = self.find_principal_point()
-        self.shape = self.measure_act_shape()
-
-    def find_principal_point(self):
-        return np.array([(self.vertices[:, 0].min() + self.vertices[:, 0].max()) / 2,
-                         self.vertices[:, 1].min(), self.vertices[:, 2].min()])
-
-    def measure_act_shape(self):
-        return self.vertices[:, :-1].max(axis=0) - self.vertices[:, :-1].min(axis=0)
-
-    def translate(self, coords):
-        t = np.asarray(coords) - self.principal_point
-        self.principal_point += t
-        return t
-
-    def scale(self, prop, req_dims):
-        scale_f = np.asarray(req_dims) / self.shape
-        if prop:
-            scale_f[:] = scale_f.max()
-        else:
-            scale_f[scale_f == 0] = 1
-
-        self.shape *= scale_f
-        self.principal_point *= scale_f
-        return scale_f
-
-
-
-
-
-
-class Handler3D(object):
-    def __init__(self, vert, faces, yr_init=0):
-        if vert.shape[1] == 3:
-            self.vertices = np.hstack((vert, np.ones((vert.shape[0], 1))))
-        else:
-            self.vertices = vert
-
-        self.faces = faces
-        self.shape = self.measure_act_shape()
-        self._xr_ang = 0
-        self._yr_ang = 0
-        self._zr_ang = 0
-
-        self.img_points = None
-
-        self.reset_angle(yr_init)
-        self.principal_point = self.find_principal_point()
-
-    def measure_act_shape(self):
-        return self.vertices[:, :-1].max(axis=0) - self.vertices[:, :-1].min(axis=0)
-
-    def find_principal_point(self):
-        return np.array([(self.vertices[:, 0].min() + self.vertices[:, 0].max()) / 2,
-                         self.vertices[:, 1].min(), self.vertices[:, 2].min()])
-
-    def transform_3d(self, r_x=None, r_y=None, r_z=None, coords=np.array([0, 0, 0]), scale=np.array([1, 1, 1])):
-        to_multiply = [self.vertices]
-
-        coords_passed = coords is not self.transform_3d.__defaults__[3]
-        scale_passed = scale is not self.transform_3d.__defaults__[4]
-
-        if coords_passed and scale_passed:
-            self.shape *= scale
-            self.principal_point *= scale
-            t = coords - self.principal_point
-            rotation = scale_and_translate_mtx(t, scale)
-            self.principal_point += t
-            to_multiply.append(rotation.T)
-
-        if coords_passed and not scale_passed:
-            t = coords - self.principal_point
-            rotation = scale_and_translate_mtx(t, scale)
-            self.principal_point += t
-            to_multiply.append(rotation.T)
-
-        if scale_passed and not coords_passed:
-            self.shape *= scale
-            principal_point_old = self.principal_point
-            self.principal_point *= scale
-            t = principal_point_old - self.principal_point
-            rotation = scale_and_translate_mtx(t, scale)
-            self.principal_point += t
-            to_multiply.append(rotation.T)
-
-        if r_x is not None:
-            rotation = rotation_mtx_wrapper(r_x - self._xr_ang, fill_rx_mtx)
-            self._xr_ang += r_x
-            to_multiply.append(rotation.T)
-
-        if r_y is not None:
-            rotation = rotation_mtx_wrapper(r_y - self._yr_ang, fill_ry_mtx)
-            self._yr_ang += r_y
-            to_multiply.append(rotation.T)
-
-        if r_z is not None:
-            rotation = rotation_mtx_wrapper(r_z - self._zr_ang, fill_rz_mtx)
-            self._zr_ang += r_z
-            to_multiply.append(rotation.T)
-
-        if len(to_multiply) > 1:
-            self.vertices = np.linalg.multi_dot(to_multiply)
-
-    def project_to_image_plan(self, img_res, f_l, sens_dim):
-        intrinsic_mtx = fill_intrinsic_mtx(img_res, f_l, sens_dim)
-        self.img_points = self.vertices @ intrinsic_mtx.T
-        self.img_points = np.asarray([self.img_points[:, 0] / self.img_points[:, 2],
-                                      self.img_points[:, 1] / self.img_points[:, 2]], dtype='int32').T
-        self.img_points[:, 1] = img_res[1] - self.img_points[:, 1]  # Reverse along y axis
-
-    def reset_angle(self, _yr_ang):
-        rotation = rotation_mtx_wrapper(_yr_ang, fill_ry_mtx)
-        self.vertices = self.vertices @ rotation.T
-
-
-def rotation_mtx_wrapper(angle, fill_function):
-    a_sin = np.sin(angle)
-    a_cos = np.cos(angle)
-    rotation = np.identity(4)
-
-    return fill_function(a_sin, a_cos, rotation)
-
-
-def fill_rx_mtx(a_sin, a_cos, rotation):
-    rotation[1][1] = a_cos
-    rotation[1][2] = -a_sin
-    rotation[2][1] = a_sin
-    rotation[2][2] = a_cos
-
-    return rotation
-
-
-def fill_ry_mtx(a_sin, a_cos, rotation):
-    rotation[0][0] = a_cos
-    rotation[0][2] = a_sin
-    rotation[2][0] = -a_sin
-    rotation[2][2] = a_cos
-
-    return rotation
-
-
-def fill_rz_mtx(a_sin, a_cos, rotation):
-    rotation[0][0] = a_cos
-    rotation[0][1] = -a_sin
-    rotation[1][0] = a_sin
-    rotation[1][1] = a_cos
-
-    return rotation
-
-
-def scale_and_translate_mtx(t, scale):
-    rotation = np.identity(4)
-    rotation[0][0] = scale[0]
-    rotation[1][1] = scale[1]
-    rotation[2][2] = scale[2]
-
-    rotation[:-1, -1] = t
-
-    return rotation
-
-
-def fill_intrinsic_mtx(img_res, f_l, sens_dim):
-    w_img, h_img = img_res
-    w_ccd, h_ccd = sens_dim
-
-    fx = f_l * w_img / float(w_ccd)
-    fy = f_l * h_img / float(h_ccd)
-
-    px = w_img / 2.0
-    py = h_img / 2.0
-
-    k = np.array([[fx, 0, px, 0],
-                  [0, fy, py, 0],
-                  [0, 0,  1,  0]])
-
-    return k
 
 
 def plt_2d_projections(vertices):
@@ -440,25 +269,136 @@ def find_basic_params(mask):
     cnts = [cnts[c_areas.index(max(c_areas))]]  # DELETE fix to avoid insignificant objects
     b_rects = [cv2.boundingRect(b_r) for b_r in cnts]
 
-    return c_areas, b_rects
+    return np.asarray(c_areas), np.asarray(b_rects)
 
 
 class PinholeCam(object):
     def __init__(self, r_x, cam_h, img_res, sens_dim, f_l):
-        self.r_x = r_x   # Now in degrees
-        self.cam_h = cam_h
+        self.r_x = np.deg2rad(r_x)  #  negative
+        self.cam_h = cam_h # Should be negative
         self.img_res = img_res
         self.sens_dim = sens_dim
         self.f_l = f_l
 
+        self.pixels_to_distance_v = np.vectorize(self.pixels_to_distance)
+        self.distance = None
+
     def pixels_to_distance(self, n):
-        n = self.img_res[1] - n
+        #n = self.img_res[1] - n
         pxlmm = self.sens_dim[1] / self.img_res[1]  # print 'pxlmm ', pxlmm
         h_px = self.img_res[1] / 2 - n
         h_mm = h_px * pxlmm  # print 'hmm ', h_mm
         bo = np.arctan(h_mm / self.f_l)  # print 'bo ', np.rad2deg(bo)
-        deg = np.deg2rad(abs(self.r_x)) + bo
+        deg = abs(self.r_x) + bo
         tan = np.tan(deg) if deg >= 0 else -1.
         d = (abs(self.cam_h) / tan)
-
         return d
+
+    def get_intrinsic_matrix(self):
+        w_img, h_img = self.img_res
+        w_ccd, h_ccd = self.sens_dim
+
+        fx = self.f_l * w_img / float(w_ccd)
+        fy = self.f_l * h_img / float(h_ccd)
+
+        px = w_img / 2.0
+        py = h_img / 2.0
+
+        k = np.array([[fx, 0, px, 0],
+                      [0, fy, py, 0],
+                      [0, 0, 1, 0]])
+
+        return k
+
+    def get_extrinsic_matrix(self):
+        ang = self.r_x
+        # R_x(angle)
+        r = np.array([[1, 0, 0, 0],
+                      [0, np.cos(ang), -np.sin(ang), 0],
+                      [0, np.sin(ang), np.cos(ang), 0],
+                      [0, 0, 0, 1]])
+
+        return r
+
+    def extract_features(self, b_rect):
+        # Reverse the lowest coordinate of bound.rect. along y axis before transformation
+        lowest_y = self.img_res[1] - (b_rect[:, 1] + b_rect[:, 3])
+        self.distance = self.pixels_to_distance_v(lowest_y)
+        print(self.distance)
+
+        self.find_3d_x(b_rect, lowest_y)
+
+    def find_3d_x(self, b_rect, lowest_y):
+        # Build a single array from left and right rects' coords to compute within single vectorized transformation
+        xlr = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords of bounding rect,
+        # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
+        xlr_yb_hom = np.vstack((xlr, np.repeat(lowest_y, 2), np.ones(2 * lowest_y.size))).T  #
+
+        z_cam_coords = self.cam_h * np.sin(self.r_x) + self.distance * np.cos(self.r_x)
+        z_cam_coords = np.expand_dims(z_cam_coords, axis=0).T
+        cam_xlr_yb_h = xlr_yb_hom * np.repeat(z_cam_coords, 2, axis=0)
+
+        k_inv = np.linalg.inv(self.get_intrinsic_matrix()[:, :-1])
+
+        cam_xlr_yb_h = cam_xlr_yb_h.T
+        camera_coords = k_inv @ cam_xlr_yb_h
+        #camera_coords[1] = -camera_coords[1]  # Some magic
+
+        camera_coords = np.vstack((camera_coords, np.ones((1, camera_coords.shape[1]))))
+        print(camera_coords, camera_coords.shape)
+
+        e_inv = np.linalg.inv(self.get_extrinsic_matrix())
+
+        rw_coords = e_inv @ camera_coords
+        print(rw_coords.T)
+
+
+
+    # def get_3d_point(self, img_coords, y, z):
+    #     z_cam_coords = (y * np.sin(np.radians(self.rw_angle))) + (z * np.cos(np.radians(self.rw_angle)))
+    #
+    #     img_coords_prime = z_cam_coords * img_coords
+    #
+    #     camera_coords = self.k_inv.dot(img_coords_prime.T)
+    #     camera_coords[1] = -camera_coords[1]  # Some magic
+    #
+    #     camera_coords_prime = np.array([np.append(camera_coords, np.array(1))])
+    #     rw_coords = self.e_inv.dot(camera_coords_prime.T)
+    #
+    #     return rw_coords.T[0]
+
+
+    def calc_width(self, z_rw, b_rect, lowest_y):
+        y_rw = self.cam_h
+
+        br_left_down_2d = np.asarray([b_rect[:, 0], lowest_y, np.ones(lowest_y.shape)]).T
+        br_right_down_2d = np.asarray([b_rect[:, 0] + b_rect[:, 2], lowest_y, np.ones(lowest_y.shape)]).T
+
+        self.get_3d_point(br_left_down_2d)
+
+        # br_left_down_2d = np.array([[x, y + h, 1]])
+        # br_right_down_2d = np.array([x + w, y + h, 1])
+        # br_down_2d = [br_left_down_2d, br_right_down_2d]
+        # br_down_3d = [self.get_3d_point(br_vertex_2d, y_rw, z_rw) for br_vertex_2d in br_down_2d]
+        #
+        # br_left_down_3d = br_down_3d[0][0]
+        # br_right_down_3d = br_down_3d[1][0]
+        # br_x_down_list = [br_left_down_3d, br_right_down_3d]
+        #
+        # br_w_3d = abs(max(br_x_down_list) - min(br_x_down_list))
+
+    def get_width(self, y_rw, z_rw, b_rect):
+        x, y, w, h = b_rect
+
+        br_left_down_2d = np.array([[x, y + h, 1]])
+        br_right_down_2d = np.array([x + w, y + h, 1])
+        br_down_2d = [br_left_down_2d, br_right_down_2d]
+        br_down_3d = [self.get_3d_point(br_vertex_2d, y_rw, z_rw) for br_vertex_2d in br_down_2d]
+
+        br_left_down_3d = br_down_3d[0][0]
+        br_right_down_3d = br_down_3d[1][0]
+        br_x_down_list = [br_left_down_3d, br_right_down_3d]
+
+        br_w_3d = abs(max(br_x_down_list) - min(br_x_down_list))
+
+        return br_w_3d

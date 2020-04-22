@@ -57,10 +57,16 @@ class PinholeCameraModel(object):
     def get_3d_point(self, img_coords, y, z):
         z_cam_coords = (y * np.sin(np.radians(self.rw_angle))) + (z * np.cos(np.radians(self.rw_angle)))
 
+
         img_coords_prime = z_cam_coords * img_coords
 
+        #print(self.k_inv, self.k_inv.shape, 'k_inv')
+        #print(img_coords_prime.T, img_coords_prime.T.shape, 'img_coords_prime.T')
         camera_coords = self.k_inv.dot(img_coords_prime.T)
+        #print(camera_coords, 'camera_coords')
         camera_coords[1] = -camera_coords[1]  # Some magic
+
+        print(camera_coords)
 
         camera_coords_prime = np.array([np.append(camera_coords, np.array(1))])
         rw_coords = self.e_inv.dot(camera_coords_prime.T)
@@ -71,8 +77,9 @@ class PinholeCameraModel(object):
         x, y, w, h = b_rect
 
         br_left_down_2d = np.array([[x, y + h, 1]])
-        br_right_down_2d = np.array([x + w, y + h, 1])
+        br_right_down_2d = np.array([[x + w, y + h, 1]])
         br_down_2d = [br_left_down_2d, br_right_down_2d]
+        #print(br_down_2d, 'bottom vert  to process')
         br_down_3d = [self.get_3d_point(br_vertex_2d, y_rw, z_rw) for br_vertex_2d in br_down_2d]
 
         br_left_down_3d = br_down_3d[0][0]

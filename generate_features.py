@@ -36,101 +36,74 @@ it = itertools.product(cam_angles, dim_ranges[0], dim_ranges[1], dim_ranges[2], 
 #                       yr_init=np.deg2rad(work_obj['yr_init']))
 # obj_3d.transform_3d(r_y=np.deg2rad(0), coords=np.asarray([0, 0, 0]), scale=np.asarray([2, 1, 1]))
 # gf.plt_2d_projections(obj_3d.vertices)
+vertices, faces = gf.parse_3d_obj_file(os.path.join(sp.obj_dir_path, o_key))
+intrinsic = (np.asarray(scene['img_res']), scene['f_l'], np.asarray(scene['sens_dim']))
+
 
 single = False
 single = True
 if single:
-    scale_f = (1, 1, 1)
-    cam_a = -30
-    y_rotate = 20
+    ww, hh, dd = 3, 2, 0
+    cam_a = -20
+    y_rotate = 0
+    x, y, z = [-2, -6, 20]
 
-    x, y, z = [0, -6, 7]
-    # obj_3d.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)), scale=scale_f)
-    # print(obj_3d.vertices)
-    # gf.plt_2d_projections(obj_3d.vertices)
+    rw_system = gf.Handler3DNew(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
+    rw_system.transform((False, np.asarray([ww, hh, dd])), y_rotate, np.asarray([x, y, z]), cam_a)
 
-    # obj_3d.project_to_image_plan(scene['img_res'], scene['f_l'], scene['sens_dim'])
-    #
-    # mask = gf.plot_mask(obj_3d.img_points, obj_3d.faces, 1, scene['img_res'])
-    #
-    # plt.imshow(mask, cmap='gray')
-    # plt.xlim(0, scene['img_res'][0]), plt.ylim(scene['img_res'][1], 0)
-    # plt.show()
-    #
-    # c_areas, b_rects = gf.find_basic_params(mask)
-    # print(c_areas, b_rects)
-    #
-    # new_cam = gf.PinholeCam(cam_a, y, scene['img_res'], scene['sens_dim'], scene['f_l'])
-    # print('new', new_cam.pixels_to_distance(b_rects[0][1] + b_rects[0][3]))
+    gf.plt_2d_projections(rw_system.transformed_vertices)
+    mask = gf.plot_mask(rw_system.img_points, faces, 7, scene['img_res'])
 
-    vertices, faces = gf.parse_3d_obj_file(os.path.join(sp.obj_dir_path, o_key))
-    # Add principal point to vertices array
-    vertices = np.vstack([vertices, gf.find_principal_point(vertices)])
+    plt.imshow(mask, cmap='gray')
+    plt.xlim(0, scene['img_res'][0]), plt.ylim(scene['img_res'][1], 0)
+    plt.show()
 
-    tracker = gf.OffsetTracker(vertices)
-    scale_f = tracker.scale(True, np.asarray([0, 4, 0]))
-    translate = tracker.translate(np.asarray([0, 0, 10]))
+    c_ar, b_rect = gf.find_basic_params(mask)
+    #c_ar, b_rect = np.repeat(c_ar, 2, axis=0), np.repeat(b_rect, 2, axis=0)
 
-    # obj_3d = gf.Handler3DNew(vertices, operations=['ry'])
-    # obj_3d.transform(np.deg2rad(work_obj['yr_init']))
-    obj_3d = gf.Handler3DNew(vertices, operations=['ry', 's', 't'])
-    obj_3d.transform(np.deg2rad(60), scale_f, np.array([10, 0, 10]))
-    gf.plt_2d_projections(obj_3d.vertices)
+    pc = gf.PinholeCam(cam_a, y, scene['img_res'], scene['sens_dim'], scene['f_l'])
 
-    # rot_obj = gf.Handler3DNew(obj_3d.vertices, obj_3d.faces, operations=['s'])
-    # tr = gf.OffsetTracker(rot_obj.vertices)
-    # rot_obj.transform(tr.scale(True, (0, 2, 0)))
-    # gf.plt_2d_projections(rot_obj.vertices)
+    PINHOLE_CAM = PinholeCameraModel(rw_angle=cam_a, f_l=scene['f_l'], w_ccd=scene['sens_dim'][0],
+                                     h_ccd=scene['sens_dim'][1], img_res=scene['img_res'])
+
+    d = [PINHOLE_CAM.pixels_to_distance(y, y_ao + h_ao) for (x, y_ao, w, h_ao) in b_rect]
+    w_ao_rw = [PINHOLE_CAM.get_width(y, dd, br) for dd, br in zip(d, b_rect)]
+    print(w_ao_rw, d, 'result old')
+
+    pc.extract_features(b_rect)
 
 
-    # obj_3d = gf.Handler3DNew(obj_3d.vertices, faces, operations=['s'])
 
-    # t = tr.translate((0, 0, 0))
-    # print(tr.find_principal_point())
-    # s1 = tr.scale(True, (0, 4, 0))
-    # print(s1)
-    # t1 = tr.translate((10, 0, 0))
-    # t2 = tr.translate((0, 0, 10))
-
-    # print(tr.find_principal_point())
-    #
-    # t2 = tr.translate((0, 0, 10))
-    # gf.plt_2d_projections(tr.vertices)
-
-    # obj_3d.transform(s1)
-    # gf.plt_2d_projections(obj_3d.vertices)
+    # print(c_ar, b_rect, lowest_y, distance)
+    # print(pc.pixels_to_distance(b_rect[0][1] + b_rect[0][3]), c_ar)
 
 
-    # obj_3d = gf.Handler3DNew(*gf.parse_3d_obj_file(os.path.join(sp.obj_dir_path, o_key)),
-    #                          operations=['ry', 's', 't', 'rx'])
-    #
-    # obj_3d.transform(np.deg2rad(y_rotate), np.asarray((x, y, z)), np.deg2rad(cam_a), np.asarray(scale_f))
-    #                  (np.asarray(scene['img_res']), scene['f_l'], np.asarray(scene['sens_dim'])))
 
-
-    # obj_3d.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)), scale=scale_f)
-    # print(obj_3d.vertices)
 
 else:
+    rw_system = gf.Handler3DNew(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
+
     start_time = timeit.default_timer()
     for i, (cam_a, ww, hh, dd, y_rotate, x, y, z, thr) in enumerate(it):
-
-        scale_f = gf.find_scale_f(work_obj['dim']['prop'], obj_3d.shape, np.asarray((ww, hh, dd)))
-        obj_3d.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)),
-                                scale=scale_f)
-
-        obj_3d.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)), scale=scale_f)
-        obj_3d.project_to_image_plan(scene['img_res'], scene['f_l'], scene['sens_dim'])
-        mask = gf.plot_mask(obj_3d.img_points, obj_3d.faces, 7, scene['img_res'])
+        rw_system.transform((True, np.asarray([ww, hh, dd])), y_rotate, np.asarray([x, y, z]), cam_a)
+        mask = gf.plot_mask(rw_system.img_points, faces, 7, scene['img_res'])
+        # scale_f = gf.find_scale_f(work_obj['dim']['prop'], rw_system.shape, np.asarray((ww, hh, dd)))
+        # rw_system.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)),
+        #                        scale=scale_f)
+        #
+        # rw_system.transform_3d(r_x=np.deg2rad(cam_a), r_y=np.deg2rad(y_rotate), coords=np.asarray((x, y, z)), scale=scale_f)
+        # rw_system.project_to_image_plan(scene['img_res'], scene['f_l'], scene['sens_dim'])
+        # mask = gf.plot_mask(rw_system.img_points, rw_system.faces, 7, scene['img_res'])
         #print(i)
 
        # params = find_obj_params5(rot_obj_3d.vertices, rot_obj_3d.faces, y, pinhole_cam, thr, work_scene['img_res'])
 
         # print(obj_3d.img_points)
         # break
+        # print(i)
 
         if i == 1000:
-            print(obj_3d.shape, obj_3d.measure_act_shape())
+            # print(rw_system.shape, rw_system.measure_act_shape())
             break
 
     elapsed = timeit.default_timer() - start_time
