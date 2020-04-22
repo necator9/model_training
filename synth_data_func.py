@@ -44,7 +44,7 @@ def find_obj_params1(m_o_vert, faces, height, pinhole_cam, kernel_size):
             c_a_px = c_a_pxs[c_a_px_i]
 
             b_r = x, y, w, h = cv2.boundingRect(cnts[c_a_px_i])
-            d = pinhole_cam.pixels_to_distance(height, y + h)
+            d = pinhole_cam.estimate_distance(height, y + h)
 
             h_rw = pinhole_cam.get_height(height, d, b_r)
             w_rw = pinhole_cam.get_width(height, d, b_r)
@@ -81,7 +81,7 @@ def find_obj_params4(m_o_vert, faces, height, pinhole_cam, rotate_y_angle, thr):
             c_a_px = c_a_pxs[c_a_px_i]
 
             b_r = x, y, w, h = cv2.boundingRect(cnts[c_a_px_i])
-            d = pinhole_cam.pixels_to_distance(height, y + h)
+            d = pinhole_cam.estimate_distance(height, y + h)
 
             h_rw = pinhole_cam.get_height(height, d, b_r)
             w_rw = pinhole_cam.get_width(height, d, b_r)
@@ -116,7 +116,7 @@ def find_obj_params5(m_o_vert, faces, height, pinhole_cam, k_size, img_res):
             c_a_px = c_a_pxs[c_a_px_i]
 
             b_r = x, y, w, h = cv2.boundingRect(cnts[c_a_px_i])
-            d = pinhole_cam.pixels_to_distance(height, y + h)
+            d = pinhole_cam.estimate_distance(height, y + h)
 
             h_rw = pinhole_cam.get_height(height, d, b_r)
             w_rw = pinhole_cam.get_width(height, d, b_r)

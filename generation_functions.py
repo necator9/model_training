@@ -249,7 +249,7 @@ def find_obj_params5(img_points, faces, height, pinhole_cam, k_size, img_res):
         c_a_px = c_a_pxs[c_a_px_i]
 
         b_r = x, y, w, h = cv2.boundingRect(cnts[c_a_px_i])
-        d = pinhole_cam.pixels_to_distance(height, y + h)
+        d = pinhole_cam.estimate_distance(height, y + h)
 
         h_rw = pinhole_cam.get_height(height, d, b_r)
         w_rw = pinhole_cam.get_width(height, d, b_r)
@@ -278,6 +278,7 @@ class PinholeCam(object):
         self.img_res = img_res
         self.sens_dim = sens_dim
         self.f_l = f_l
+        self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
 
         intrinsic_mtx = IntrinsicMtx((self.img_res, self.f_l, self.sens_dim), None, None).mtx
         self.rev_intrinsic_mtx = np.linalg.inv(intrinsic_mtx[:, :-1])  # Last column is not needed in reverse transf.
@@ -285,15 +286,13 @@ class PinholeCam(object):
         rot_x_mtx = RotationMtx('rx', None).build(self.r_x)
         self.rev_rot_x_mtx = np.linalg.inv(rot_x_mtx)
 
-        self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
-
-        self.estimate_distance = np.vectorize(self.pixels_to_distance)
+        self.estimate_distance_v = np.vectorize(self.estimate_distance)
 
     def extract_features(self, b_rect):
         # Important! Reverse the lowest coordinate of bound.rect. along y axis before transformations
         lowest_y = self.img_res[1] - (b_rect[:, 1] + b_rect[:, 3])
 
-        rw_distance = self.estimate_distance(lowest_y)
+        rw_distance = self.estimate_distance_v(lowest_y)
 
         left_bottom, right_bottom = self.estimate_3d_coordinates(b_rect, lowest_y, rw_distance)
 
@@ -302,10 +301,9 @@ class PinholeCam(object):
         print(rw_distance, left_bottom, right_bottom, rw_width)
         print(self.estimate_height(rw_distance, b_rect))
 
-    def pixels_to_distance(self, n):
-        pxlmm = self.sens_dim[1] / self.img_res[1]
+    def estimate_distance(self, n):
         h_px = self.img_res[1] / 2 - n
-        h_mm = h_px * pxlmm
+        h_mm = h_px * self.px_h_mm
         bo = np.arctan(h_mm / self.f_l)
         deg = abs(self.r_x) + bo
         tan = np.tan(deg) if deg >= 0 else -1.
@@ -340,15 +338,16 @@ class PinholeCam(object):
         h = abs(self.cam_h)
         hypot = np.hypot(h, d)
         angles_to_horizon = self.find_angle_to_horizon_line(pixels_bot_up)
-
         angle_between_pixels = np.absolute(angles_to_horizon[:, 0] - angles_to_horizon[:, 1])
-
         gamma = np.arctan(d * 1. / h)
         beta = np.pi - angle_between_pixels - gamma
+
         return hypot * np.sin(angle_between_pixels) / np.sin(beta)
 
     # Find angle between object pixel and central image pixel along y axis
     def find_angle_to_horizon_line(self, pix):
-        h_px = self.img_res[1] / 2. - pix
-        h_mm = h_px * self.px_h_mm
-        return np.arctan(h_mm / self.f_l)
+        h_to_hor = self.img_res[1] / 2. - pix  # distance from pixel to img center along y axis
+        np.multiply(h_to_hor, self.px_h_mm, out=h_to_hor)  # h_to_hor updated, the distance converted to mm
+        np.arctan(np.divide(h_to_hor, self.f_l, out=h_to_hor), out=h_to_hor)
+
+        return h_to_hor
