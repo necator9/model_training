@@ -292,6 +292,8 @@ class PinholeCam(object):
         # Important! Reverse the lowest coordinate of bound.rect. along y axis before transformations
         lowest_y = self.img_res[1] - (b_rect[:, 1] + b_rect[:, 3])
 
+        h_to_hor = self.img_res[1] / 2. - lowest_y  # distance from pixel to img center along y axis
+
         rw_distance = self.estimate_distance_v(lowest_y)
 
         left_bottom, right_bottom = self.estimate_3d_coordinates(b_rect, lowest_y, rw_distance)
@@ -303,6 +305,15 @@ class PinholeCam(object):
 
     def estimate_distance(self, n):
         h_px = self.img_res[1] / 2 - n
+        h_mm = h_px * self.px_h_mm
+        bo = np.arctan(h_mm / self.f_l)
+        deg = abs(self.r_x) + bo
+        tan = np.tan(deg) if deg >= 0 else -1.
+        d = abs(self.cam_h) / tan
+        return d
+
+    def estimate_distance1(self, n):
+        h_px = self.img_res[1] / 2 - n  #
         h_mm = h_px * self.px_h_mm
         bo = np.arctan(h_mm / self.f_l)
         deg = abs(self.r_x) + bo
