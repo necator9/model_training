@@ -46,7 +46,7 @@ if single:
     ww, hh, dd = 3, 2, 0
     cam_a = -10
     y_rotate = 0
-    x, y, z = [-1, -1, 15]
+    x, y, z = [0, -1, 15]
 
     rw_system = gf.Handler3DNew(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
     rw_system.transform((False, np.asarray([ww, hh, dd])), np.deg2rad(y_rotate), np.asarray([x, y, z]),
@@ -60,24 +60,19 @@ if single:
     plt.show()
 
     c_ar, b_rect = gf.find_basic_params(mask)
-    #c_ar, b_rect = np.repeat(c_ar, 2, axis=0), np.repeat(b_rect, 2, axis=0)
 
-    pc = gf.PinholeCam(np.deg2rad(cam_a), y, np.asarray(scene['img_res']), np.asarray(scene['sens_dim']), scene['f_l'])
+    if any(c_ar):
+        # ONLY FOR SYNTHETIC GENERATOR DELETE fix to avoid insignificant objects
+        max_idx = np.argmax(c_ar)
+        c_ar, b_rect = np.expand_dims(c_ar[max_idx], axis=0), np.expand_dims(b_rect[max_idx], axis=0)
+        print(c_ar, b_rect)
+        #######################
 
-    PINHOLE_CAM = PinholeCameraModel(rw_angle=cam_a, f_l=scene['f_l'], w_ccd=scene['sens_dim'][0],
-                                     h_ccd=scene['sens_dim'][1], img_res=scene['img_res'])
-
-    d = [PINHOLE_CAM.pixels_to_distance(y, y_ao + h_ao) for (x, y_ao, w, h_ao) in b_rect]
-    w_ao_rw = [PINHOLE_CAM.get_width(y, dd, br) for dd, br in zip(d, b_rect)]
-    h_ao_rw = [PINHOLE_CAM.get_height(y, dd, br) for dd, br in zip(d, b_rect)]
-    print(d, w_ao_rw, h_ao_rw, 'result old')
-
-    pc.extract_features(b_rect)
+        pc = gf.FeatureExtractor(cam_a, y, np.asarray(scene['img_res']), np.asarray(scene['sens_dim']), scene['f_l'])
 
 
 
-    # print(c_ar, b_rect, lowest_y, distance)
-    # print(pc.pixels_to_distance(b_rect[0][1] + b_rect[0][3]), c_ar)
+        pc.extract_features(c_ar, b_rect)
 
 
 
@@ -117,7 +112,13 @@ else:
 
 
 
+     #   PINHOLE_CAM = PinholeCameraModel(rw_angle=cam_a, f_l=scene['f_l'], w_ccd=scene['sens_dim'][0],
+     #                                    h_ccd=scene['sens_dim'][1], img_res=scene['img_res'])
 
+     #   d = [PINHOLE_CAM.pixels_to_distance(y, y_ao + h_ao) for (x, y_ao, w, h_ao) in b_rect]
+     #   w_ao_rw = [PINHOLE_CAM.get_width(y, dd, br) for dd, br in zip(d, b_rect)]
+     #   h_ao_rw = [PINHOLE_CAM.get_height(y, dd, br) for dd, br in zip(d, b_rect)]
+     #   print(d, w_ao_rw, h_ao_rw, 'result old')
 
 
 

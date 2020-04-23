@@ -265,72 +265,75 @@ def find_obj_params5(img_points, faces, height, pinhole_cam, k_size, img_res):
 def find_basic_params(mask):
     cnts, _ = cv2.findContours(mask, mode=0, method=1)
     c_areas = [cv2.contourArea(cnt) for cnt in cnts]
-    cnts = [cnts[c_areas.index(max(c_areas))]]  # DELETE fix to avoid insignificant objects
     b_rects = [cv2.boundingRect(b_r) for b_r in cnts]
 
     return np.asarray(c_areas), np.asarray(b_rects)
 
 
-class PinholeCam(object):
+class FeatureExtractor(object):
     def __init__(self, r_x, cam_h, img_res, sens_dim, f_l):
-        self.r_x = r_x  # comes in  radians
-        self.cam_h = cam_h # Should be negative
-        self.img_res = img_res
-        self.sens_dim = sens_dim
-        self.f_l = f_l
+        self.r_x = np.deg2rad(r_x, dtype=np.float32)  # Camera rotation angle about x axis in radians
+        self.cam_h = np.asarray(cam_h, dtype=np.float32)  # Ground y coord relative to camera (cam. is origin) in meters
+        self.img_res = np.asarray(img_res, dtype=np.int16)  # Image resolution (width, height) in px
+        self.sens_dim = np.asarray(sens_dim, dtype=np.float32)  # Camera sensor dimensions (width, height) in mm
         self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
+        self.f_l = np.asarray(f_l, dtype=np.float32)  # Focal length in mm
 
+        # Transformation matrices for 3D reconstruction
         intrinsic_mtx = IntrinsicMtx((self.img_res, self.f_l, self.sens_dim), None, None).mtx
         self.rev_intrinsic_mtx = np.linalg.inv(intrinsic_mtx[:, :-1])  # Last column is not needed in reverse transf.
-
         rot_x_mtx = RotationMtx('rx', None).build(self.r_x)
         self.rev_rot_x_mtx = np.linalg.inv(rot_x_mtx)
 
-        self.estimate_distance_v = np.vectorize(self.estimate_distance)
+    def extract_features(self, ca_px, b_rect):
+        # * Transform bounding rectangles to required shape
+        # Important! Reverse the y coordinates of bound.rect. along y axis before transformations (self.img_res[1] - y)
+        px_y_bottom_top = self.img_res[1] - np.stack((b_rect[:, 1] + b_rect[:, 3], b_rect[:, 1]), axis=1)
+        # Distances from vertices to img center (horizon) along y axis, in px
+        y_bottom_top_to_hor = self.img_res[1] / 2. - px_y_bottom_top
+        np.multiply(y_bottom_top_to_hor, self.px_h_mm, out=y_bottom_top_to_hor)  # Convert to mm
+        # Find angle between object pixel and central image pixel along y axis
+        np.arctan(np.divide(y_bottom_top_to_hor, self.f_l, out=y_bottom_top_to_hor), out=y_bottom_top_to_hor)
 
-    def extract_features(self, b_rect):
-        # Important! Reverse the lowest coordinate of bound.rect. along y axis before transformations
-        lowest_y = self.img_res[1] - (b_rect[:, 1] + b_rect[:, 3])
+        # * Find object distance in real world
+        rw_distance = self.estimate_distance(y_bottom_top_to_hor[:, 0])  # Passed arg is angles to bottom vertices
+        # * Find object height in real world
+        rw_height = self.estimate_height(rw_distance, y_bottom_top_to_hor)
 
-        h_to_hor = self.img_res[1] / 2. - lowest_y  # distance from pixel to img center along y axis
+        # * Transform bounding rectangles to required shape
+        # Build a single array from left and right rects' coords to compute within single vectorized transformation
+        px_x_l_r = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords
+        # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
+        x_lr_yb_hom = np.stack((px_x_l_r,
+                                np.repeat(px_y_bottom_top[:, 0], 2),
+                                np.ones(2 * px_y_bottom_top.shape[0])), axis=1)
 
-        rw_distance = self.estimate_distance_v(lowest_y)
-
-        left_bottom, right_bottom = self.estimate_3d_coordinates(b_rect, lowest_y, rw_distance)
-
+        # * Find object coordinates in real world
+        left_bottom, right_bottom = self.estimate_3d_coordinates(x_lr_yb_hom, rw_distance)
+        # * Find object width in real world
         rw_width = np.absolute(left_bottom[:, 0] - right_bottom[:, 0])
 
-        print(rw_distance, left_bottom, right_bottom, rw_width)
-        print(self.estimate_height(rw_distance, b_rect))
+        # * Find contour area in real world
+        rw_rect_a = rw_width * rw_height
+        px_rect_a = b_rect[:, 2] * b_rect[:, 3]
+        rw_ca = ca_px * rw_rect_a / px_rect_a
 
-    def estimate_distance(self, n):
-        h_px = self.img_res[1] / 2 - n
-        h_mm = h_px * self.px_h_mm
-        bo = np.arctan(h_mm / self.f_l)
-        deg = abs(self.r_x) + bo
-        tan = np.tan(deg) if deg >= 0 else -1.
-        d = abs(self.cam_h) / tan
-        return d
+        return rw_distance, left_bottom, right_bottom, rw_width, rw_height, rw_ca
 
-    def estimate_distance1(self, n):
-        h_px = self.img_res[1] / 2 - n  #
-        h_mm = h_px * self.px_h_mm
-        bo = np.arctan(h_mm / self.f_l)
-        deg = abs(self.r_x) + bo
-        tan = np.tan(deg) if deg >= 0 else -1.
-        d = abs(self.cam_h) / tan
-        return d
+    # Estimate distance to the bottom pixel of a bounding rectangle. Based on assumption that object is aligned with the
+    # ground surface. Calculation uses angle between vertex and optical center along vertical axis
+    def estimate_distance(self, ang_y_bot_to_hor):
+        deg = abs(self.r_x) + ang_y_bot_to_hor
+        distance = abs(self.cam_h) / np.where(deg >= 0, np.tan(deg), np.inf)
 
-    def estimate_3d_coordinates(self, b_rect, lowest_y, distance):
-        # Build a single array from left and right rects' coords to compute within single vectorized transformation
-        xlr = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords of bounding rect,
-        # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
-        xlr_yb_hom = np.vstack((xlr, np.repeat(lowest_y, 2), np.ones(2 * lowest_y.size))).T  #
+        return distance
 
+    # Estimate coordinates of vertices in real world
+    def estimate_3d_coordinates(self, x_lr_yb_hom, distance):
         # Z cam is a scaling factor which is needed for 3D reconstruction
         z_cam_coords = self.cam_h * np.sin(self.r_x) + distance * np.cos(self.r_x)
         z_cam_coords = np.expand_dims(np.repeat(z_cam_coords, 2), axis=0).T
-        cam_xlr_yb_h = xlr_yb_hom * z_cam_coords
+        cam_xlr_yb_h = x_lr_yb_hom * z_cam_coords
 
         # Transform from image plan to camera coordinate system
         camera_coords = self.rev_intrinsic_mtx @ cam_xlr_yb_h.T
@@ -341,24 +344,14 @@ class PinholeCam(object):
 
         left_bottom, right_bottom = np.split(rw_coords.T, 2, axis=0)  # Split into left/right vertices
         # left_bottom = [[ X,  Y,  Z,  1],  #  - The structure of a returning vertices array, where each row is
-        #                [.., .., .., ..]...]    different rectangle. The right_bottom has the same form
+        #                [.., .., .., ..]...]    different rectangle. The right_bottom has the same format
         return left_bottom, right_bottom
 
-    def estimate_height(self, d, b_rect):
-        pixels_bot_up = np.vstack((b_rect[:, 1], b_rect[:, 1] + b_rect[:, 3])).T
-        h = abs(self.cam_h)
-        hypot = np.hypot(h, d)
-        angles_to_horizon = self.find_angle_to_horizon_line(pixels_bot_up)
-        angle_between_pixels = np.absolute(angles_to_horizon[:, 0] - angles_to_horizon[:, 1])
-        gamma = np.arctan(d * 1. / h)
+    # Estimate height of object in real world
+    def estimate_height(self, distance, ang_y_bot_top_to_hor):
+        angle_between_pixels = np.absolute(ang_y_bot_top_to_hor[:, 0] - ang_y_bot_top_to_hor[:, 1])
+        gamma = np.arctan(distance * 1. / abs(self.cam_h))
         beta = np.pi - angle_between_pixels - gamma
+        height = np.hypot(abs(self.cam_h), distance) * np.sin(angle_between_pixels) / np.sin(beta)
 
-        return hypot * np.sin(angle_between_pixels) / np.sin(beta)
-
-    # Find angle between object pixel and central image pixel along y axis
-    def find_angle_to_horizon_line(self, pix):
-        h_to_hor = self.img_res[1] / 2. - pix  # distance from pixel to img center along y axis
-        np.multiply(h_to_hor, self.px_h_mm, out=h_to_hor)  # h_to_hor updated, the distance converted to mm
-        np.arctan(np.divide(h_to_hor, self.f_l, out=h_to_hor), out=h_to_hor)
-
-        return h_to_hor
+        return height
