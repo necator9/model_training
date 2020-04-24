@@ -54,6 +54,9 @@ def init_iterator(sc, work_obj):
 
 # Worker function
 def generate_features(o_key, scene_key, save_q, stop_event):
+    def get_status(i, total_iter):
+        return '{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter)
+
     multiprocessing.current_process().name = o_key  # Set process name
     # Generate iterator from parameters in config
     work_obj = sp.obj_info[o_key]
@@ -105,7 +108,7 @@ def generate_features(o_key, scene_key, save_q, stop_event):
             if entries_counter % 10000 == 0:
                 save_q.put(data_to_save)
                 data_to_save = list()
-                logger.info('{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter))
+                logger.info(get_status(i, total_iter))
 
         if stop_event.is_set():
             break
@@ -116,6 +119,8 @@ def generate_features(o_key, scene_key, save_q, stop_event):
 
     if len(data_to_save) > 0:
         save_q.put(data_to_save)
+
+    logger.info('Finished {}'.format(get_status(i, total_iter)))
 
 
 def saver_thr(out_f, q, stop_event):
