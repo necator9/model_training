@@ -2,12 +2,14 @@ import os
 import numpy as np
 import itertools
 import matplotlib.pyplot as plt
+import pandas as pd
 import cv2
 
 
 def find_principal_point(vertices):
     return np.array([[(vertices[:, 0].min() + vertices[:, 0].max()) / 2,
                      vertices[:, 1].min(), vertices[:, 2].min(), 1]])
+
 
 def build_dims_mask(in_dim):
     in_dim = np.asarray(in_dim)
@@ -42,22 +44,11 @@ def find_scale_f(prop, shape, req_dims):
     return scale_f
 
 
-
 def parse_string(string):
     spl = [el.split('//') for el in string.split()]
     res = [el[0] for i, el in enumerate(spl) if i != 0]
 
     return res
-
-
-def center_3d_obj(vert):
-    centers = [np.median([vert[:, 0].max(), vert[:, 0].min()]), vert[:, 1].min(),
-               vert[:, 2].min()]  # xc, y_lowest, zc
-    vert[:, 0] = vert[:, 0] - centers[0]
-    vert[:, 1] = vert[:, 1] - centers[1]
-    vert[:, 2] = vert[:, 2] - centers[2]
-
-    return vert
 
 
 def parse_3d_obj_file(path):
@@ -71,19 +62,8 @@ def parse_3d_obj_file(path):
     faces = np.asarray([[int(el) for el in ln] for ln in faces]) - 1
 
     vertices = np.hstack((vertices, np.ones((vertices.shape[0], 1))))
-    vertices = center_3d_obj(vertices)
 
     return vertices, faces
-
-
-# # Defines interface to transformation matrices
-# class TransformMtx(object):
-#     def __init__(self, key):
-#         self.mtx = None
-#
-#     def build(self, *args):
-#         # Fills self.mtx accordingly and return mtx.T
-#         pass
 
 
 class TranslateMtx(object):
@@ -219,7 +199,13 @@ def plt_2d_projections(vertices):
     plt.show()
 
 
-def plot_mask(img_points, faces, k_size, img_res):
+def plot_image_plane(mask, img_res):
+    plt.imshow(mask, cmap='gray')
+    plt.xlim(0, img_res[0]), plt.ylim(img_res[1], 0)
+    plt.show()
+
+
+def generate_image_plane(img_points, faces, k_size, img_res):
     mask = np.zeros((img_res[1], img_res[0]), np.uint8)
     poly = np.take(img_points, faces, axis=0)
     for p in poly:
@@ -228,38 +214,6 @@ def plot_mask(img_points, faces, k_size, img_res):
     cv2.dilate(mask, cv2.getStructuringElement(0, (int(k_size), int(k_size))), dst=mask)
 
     return mask
-
-
-def find_obj_params5(img_points, faces, height, pinhole_cam, k_size, img_res):
-
-    mask = np.zeros((img_res[1], img_res[0]), np.uint8)
-
-    for face in faces:
-        poly = np.array([img_points[i - 1] for i in face])
-        mask = cv2.fillPoly(mask, pts=[poly], color=255)
-
-    mask = cv2.blur(mask, (int(k_size), int(k_size)))
-
-    _, mask = cv2.threshold(mask, 40, 255, cv2.THRESH_BINARY)
-    cnts, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    c_a_pxs = [cv2.contourArea(cnt) for cnt in cnts]
-
-    if any(c_a_pxs):
-        c_a_px_i = c_a_pxs.index(max(c_a_pxs))
-        c_a_px = c_a_pxs[c_a_px_i]
-
-        b_r = x, y, w, h = cv2.boundingRect(cnts[c_a_px_i])
-        d = pinhole_cam.estimate_distance(height, y + h)
-
-        h_rw = pinhole_cam.get_height(height, d, b_r)
-        w_rw = pinhole_cam.get_width(height, d, b_r)
-
-        rect_area_rw = w_rw * h_rw
-        rect_area_px = w * h
-        extent = float(c_a_px) / rect_area_px
-        c_a_rw = c_a_px * rect_area_rw / rect_area_px
-
-        return [d, c_a_rw, w_rw, h_rw, extent, x, y, w, h, c_a_px]
 
 
 def find_basic_params(mask):
@@ -318,7 +272,7 @@ class FeatureExtractor(object):
         px_rect_a = b_rect[:, 2] * b_rect[:, 3]
         rw_ca = ca_px * rw_rect_a / px_rect_a
 
-        return rw_distance, left_bottom, right_bottom, rw_width, rw_height, rw_ca
+        return rw_distance, left_bottom[:, 0] - rw_width / 2, rw_width, rw_height, rw_ca
 
     # Estimate distance to the bottom pixel of a bounding rectangle. Based on assumption that object is aligned with the
     # ground surface. Calculation uses angle between vertex and optical center along vertical axis
@@ -355,3 +309,16 @@ class FeatureExtractor(object):
         height = np.hypot(abs(self.cam_h), distance) * np.sin(angle_between_pixels) / np.sin(beta)
 
         return height
+
+
+def write_to_csv(header_, data_, out_file):
+    df = pd.DataFrame(data_, columns=['cam_a', 'y', 'z_est', 'z', 'x_est', 'x', 'width_est', 'ww', 'height_est', 'hh',
+                                      'rw_ca_est', 'o_name', 'o_class', 'ry', 'x_px', 'y_px', 'w_px', 'h_px', 'c_ar_px',
+                                      'thr', 'dd'])
+    df = df.round({"z_est": 2, "x_est": 2, "rw_ca_est": 3, "width_est": 2, "height_est": 2, 'x': 2, 'y': 2, 'z': 2,
+                  'cam_a': 1, 'ry': 1, 'ww': 2, 'hh': 2, 'dd': 2})
+
+    with open(out_file, 'a') as f:
+        df.to_csv(f, header=header_, index=False)
+
+    return False
