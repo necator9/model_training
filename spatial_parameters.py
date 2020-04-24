@@ -4,13 +4,14 @@
 # In this case, no images will be rendered and the data stored in *.csv file.
 # The keys starting with "_" are ignored in both scenarios
 
-loglevel = 10
+loglevel = 20
 
 """
 key 'dim': [[dimension-id, lower-border, higher-border, amount-of-points-between]],
 where dimension-id lies in range [0, 1, 2] that correspond to [X, Y, Z] (object width, height, depth)
 """
-obj_dir_path = '/home/ivan/Nextcloud/PhD_thesis/3dsmax/low_poly_obj/'
+# obj_dir_path = '/home/ivan/Nextcloud/PhD_thesis/3dsmax/low_poly_obj/'
+obj_dir_path = 'obj/'
 
 st_ry = (0, 90, 5)
 st_flip = 180

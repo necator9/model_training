@@ -53,7 +53,6 @@ def parse_string(string):
 
 def parse_3d_obj_file(path):
     step = 39.3701
-    path = os.path.join('obj', path)
     with open(path, "r") as fi:
         lines = fi.readlines()
 

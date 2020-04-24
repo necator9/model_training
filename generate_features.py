@@ -102,10 +102,10 @@ def generate_features(o_key, scene_key, save_q, stop_event):
                                  o_key, o_class, ry, x_px, y_px, w_px, h_px, c_ar[0], thr, dd])
             entries_counter += 1
 
-            if entries_counter % 200 == 0:
+            if entries_counter % 10000 == 0:
                 save_q.put(data_to_save)
                 data_to_save = list()
-                logger.info('{:3.2f}, {}\n'.format(i / total_iter * 100, i))
+                logger.info('{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter))
 
         if stop_event.is_set():
             break
