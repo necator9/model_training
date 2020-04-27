@@ -4,7 +4,7 @@
 # In this case, no images will be rendered and the data stored in *.csv file.
 # The keys starting with "_" are ignored in both scenarios
 
-loglevel = 10
+loglevel = 20
 
 """
 key 'dim': [[dimension-id, lower-border, higher-border, amount-of-points-between]],
