@@ -78,7 +78,8 @@ def generate_features(o_key, scene_key, save_q, stop_event):
     data_to_save = list()
     entries_counter = 0
     prev_rx, prev_y = None, None
-    for i, (cam_a, ww, hh, dd, ry, x, y, z, thr) in enumerate(it):
+    i = 0
+    for cam_a, ww, hh, dd, ry, x, y, z, thr in it:
         rw_system.transform((is_prop, np.asarray([ww, hh, dd])), np.deg2rad(ry_init + ry), np.asarray([x, y, z]),
                             np.deg2rad(cam_a))  # Transform object in 3D space and project to image plane
 
@@ -97,8 +98,8 @@ def generate_features(o_key, scene_key, save_q, stop_event):
             # Extract features from contours and bounding rectangles
             z_est, x_est, width_est, height_est, rw_ca_est = pc.extract_features(c_ar, b_rect)
             # Get actual object shape from feature extractor instance
-            shape_mtx = [mtx.shape for mtx in rw_system.mtx_seq if isinstance(mtx, gf.ScaleMtx)]
-            ww, hh, dd, = shape_mtx[0]
+            shape_mtx = [mtx for mtx in rw_system.mtx_seq if isinstance(mtx, gf.ScaleMtx)]
+            ww, hh, dd, = shape_mtx[0].shape_cursor
             x_px, y_px, w_px, h_px = b_rect[0]
             # Form entry of generated parameters to save
             data_to_save.append([cam_a, y, z_est[0], z, x_est[0], x, width_est[0], ww, height_est[0], hh, rw_ca_est[0],
@@ -116,6 +117,8 @@ def generate_features(o_key, scene_key, save_q, stop_event):
         if logger.getEffectiveLevel() == logging.DEBUG:
             gf.plt_2d_projections(rw_system.transformed_vertices)
             gf.plot_image_plane(mask, img_res)
+
+        i += 1
 
     if len(data_to_save) > 0:
         save_q.put(data_to_save)

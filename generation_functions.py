@@ -84,16 +84,17 @@ class ScaleMtx(object):
     def __init__(self, key, vertices):
         self.vertices = vertices
         self.mtx = np.identity(4)
-        self.shape = self.measure_act_shape()
+        self.shape_cursor = self.measure_act_shape()
 
     def build(self, args):
-        self.shape = self.measure_act_shape()
         prop, req_dims = args
-        scale_f = np.asarray(req_dims) / self.shape
+        scale_f = np.asarray(req_dims) / self.shape_cursor
         if prop:
             scale_f[:] = scale_f.max()
         else:
             scale_f[scale_f == 0] = 1
+
+        self.shape_cursor *= scale_f
 
         np.fill_diagonal(self.mtx, np.append(scale_f, 1))
         return self.mtx

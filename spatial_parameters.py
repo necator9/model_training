@@ -4,7 +4,7 @@
 # In this case, no images will be rendered and the data stored in *.csv file.
 # The keys starting with "_" are ignored in both scenarios
 
-loglevel = 20
+loglevel = 10
 
 """
 key 'dim': [[dimension-id, lower-border, higher-border, amount-of-points-between]],
@@ -29,7 +29,7 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                            'ry_init': st_flip},
             'pair-2.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 2,
                            'ry_init': st_flip},
-            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 4,
+            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 4,
                           'ry_init': st_flip},
             'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 2, 2, 1]]}, 'rotate_y': (20, 20, 1), 'o_class': 1,
                              'ry_init': 180}}
