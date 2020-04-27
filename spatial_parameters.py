@@ -32,7 +32,7 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
             'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 4,
                           'ry_init': st_flip},
             'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 2, 2, 1]]}, 'rotate_y': (20, 20, 1), 'o_class': 1,
-                             'ry_init': 180}}
+                             'ry_init': st_flip}}
 
 
 scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_range': (-2, -7, -0.2),
