@@ -31,19 +31,23 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                            'ry_init': st_flip},
             'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 4,
                           'ry_init': st_flip},
-            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 2, 2, 1]]}, 'rotate_y': (20, 20, 1), 'o_class': 1,
+            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.52, 1.52, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
                              'ry_init': st_flip}}
 
 
 scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_range': (-2, -7, -0.2),
                            'z_range': (1, 30, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                            'thr_range': (1, 26, 12)},
-              'test_1': {'cam_angle': (-20, -21, -1), 'x_range': (-2, -1, 1), 'y_range': (-5, -6, -1),
-                         'z_range': (8, 9, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+              'test_1': {'cam_angle': (-22, -23, -1), 'x_range': (-2, -1, 1), 'y_range': (-3.2, -3.3, -0.1),
+                         'z_range': (13, 14, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                          'thr_range': (1, 2, 1)},
-              'for_plot': {'cam_angle': (-22, -23, -1), 'x_range': (-8, 10, 2), 'y_range': (-3.1, -3.2, -0.1),
-                           'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                           'thr_range': (1, 26, 12)}}
+              '_for_plot': {'cam_angle': (-22, -23, -1), 'x_range': (-8, 10, 2), 'y_range': (-3.1, -3.2, -0.1),
+                            'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                            'thr_range': (1, 26, 12)},
+              'rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
+                            'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                            'thr_range': (1, 26, 12)}
+              }
 
 
 
