@@ -151,7 +151,7 @@ if __name__ == '__main__':
     stop_event_saver = m.Event()
     data_save_q = m.Queue()
 
-    out_file = os.path.join('{}.csv'.format(sys.argv[1])) if len(sys.argv) == 2 else 'default_filename.csv'
+    out_file = sys.argv[1] if len(sys.argv) == 2 else 'default_filename.csv'
     saver = multiprocessing.Process(target=saver_thr, args=(out_file, data_save_q, stop_event_saver), name='saver')
     o_keys = sp.obj_info.keys()
     scene_key = sp.scene_info.keys()

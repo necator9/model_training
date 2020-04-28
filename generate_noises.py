@@ -82,46 +82,46 @@ def gen_w_h(hulls_, points_amount_, w_rg_, h_rg_):
 POINTS_AMOUNT = 3000
 
 # Mapping of keys in csv file
-cam_a = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
+cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
 # 0 deg. - the camera is parallel to the ground surface; -90 deg. - camera points perpendicularly down
-cam_y = 'y'             # Ground surface offset (negative camera height) relative to camera origin in range [-3, -n] m
-w = 'width_est'         # Feature - estimated object width
-h = 'height_est'        # Feature - estimated object height
-ca = 'rw_ca_est'        # Feature - estimated object contour area
-z = 'z_est'             # Feature - estimated object distance from a camera
-o_class = 'o_class'     # Object class as an integer, where 0 is a noise class
+cam_y_k = 'y'             # Ground surface offset (negative camera height) relative to camera origin in range [-3, -n] m
+w_k = 'width_est'         # Feature - estimated object width
+h_k = 'height_est'        # Feature - estimated object height
+ca_k = 'rw_ca_est'        # Feature - estimated object contour area
+z_k = 'z_est'             # Feature - estimated object distance from a camera
+o_class_k = 'o_class'     # Object class as an integer, where 0 is a noise class
 
 csv_file = sys.argv[1]  # Path to targeted csv file passed as cl argument
 obj_features = pd.read_csv(csv_file)  # Read generated features
 # Find available camera angles and heights
-angle_rg = obj_features[cam_a].unique()
-height_rg = obj_features[cam_y].unique()
+angle_rg = obj_features[cam_a_k].unique()
+height_rg = obj_features[cam_y_k].unique()
 it_params = itertools.product(angle_rg, height_rg)
 
-o_classes = obj_features[o_class].unique()
+o_classes = obj_features[o_class_k].unique()
 
 total_iterations = len(angle_rg) * len(height_rg)
 logger.info('Total iterations: {}'.format(total_iterations))
-logger.info('Camera height range: {}\nCamera angle range {}'.format(height_rg, angle_rg))
+logger.info('Camera height range: {}\nCamera angle range: {}'.format(height_rg, angle_rg))
 
-noise = pd.DataFrame(columns=[w, h, ca, z, cam_a, cam_y, o_class])
+noise = pd.DataFrame(columns=[w_k, h_k, ca_k, z_k, cam_a_k, cam_y_k, o_class_k])
 
 it = 0
 for angle, height in it_params:
     try:
         # Select one slice with particular angle and height
-        a_h_data = obj_features[(obj_features[cam_a] == angle) & (obj_features[cam_y] == height)]
+        a_h_data = obj_features[(obj_features[cam_a_k] == angle) & (obj_features[cam_y_k] == height)]
         # Find border values for ranges of important basic features
-        w_rg = find_rg((a_h_data[w].min(), a_h_data[w].max()))
-        h_rg = find_rg((a_h_data[h].min(), a_h_data[h].max()))
+        w_rg = find_rg((a_h_data[w_k].min(), a_h_data[w_k].max()))
+        h_rg = find_rg((a_h_data[h_k].min(), a_h_data[h_k].max()))
 
         hulls = []
         # Iterate through the object classes
         for i in o_classes:
             try:
                 # Select and transform to required form
-                df = a_h_data[a_h_data[o_class] == i]
-                df = np.vstack([df[w], df[h]]).T
+                df = a_h_data[a_h_data[o_class_k] == i]
+                df = np.vstack([df[w_k], df[h_k]]).T
 
                 hulls.append(get_hull(df))  # Generate 2-dim hull for each class
 
@@ -134,7 +134,7 @@ for angle, height in it_params:
         # Generate features of width and height for a class of noise
         w_h = gen_w_h(hulls, POINTS_AMOUNT, w_rg, h_rg)
         # Find available distance range
-        d_rg = find_rg((a_h_data[z].min(), a_h_data[z].max()), margin=0.5)
+        d_rg = find_rg((a_h_data[z_k].min(), a_h_data[z_k].max()), margin=0.5)
         # d = np.expand_dims(np.array([round(i) for i in np.random.uniform(*d_rg, size=[points_amount, 1])]), axis=1)
         d = np.random.uniform(*d_rg, size=[POINTS_AMOUNT, 1])  # Fill the distance range uniformly
 
@@ -146,10 +146,11 @@ for angle, height in it_params:
         res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle,
                          np.zeros((POINTS_AMOUNT, 1))))
 
-        logging.debug('Data to write: {}\nExisting columns: {}'.format(res, [w, h, ca, z, cam_y, cam_a, o_class]))
+        logger.debug('Data to write: {}\nExisting columns: {}'.
+                     format(res.shape, [w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k]))
 
         # Put all together
-        iter_data = pd.DataFrame(res, columns=[w, h, ca, z, cam_y, cam_a, o_class])
+        iter_data = pd.DataFrame(res, columns=[w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k])
         noise = noise.append(iter_data)
 
         it += 1
@@ -160,4 +161,4 @@ for angle, height in it_params:
 
 dir_path = os.path.split(csv_file)[0]  # Extract dir path form input path
 in_file_name = os.path.split(csv_file)[1]  # Extract filename form input path
-noise.to_csv(os.path.join(dir_path, 'n_{}'.format(in_file_name)))
+noise.to_csv(os.path.join(dir_path, 'n_{}'.format(in_file_name)), index=False)
