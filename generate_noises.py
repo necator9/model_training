@@ -134,14 +134,14 @@ for angle, height in it_params:
         # Generate features of width and height for a class of noise
         w_h = gen_w_h(hulls, POINTS_AMOUNT, w_rg, h_rg)
         # Find available distance range
-        d_rg = find_rg((a_h_data.d.min(), a_h_data.d.max()), margin=0.5)
+        d_rg = find_rg((a_h_data[z].min(), a_h_data[z].max()), margin=0.5)
         # d = np.expand_dims(np.array([round(i) for i in np.random.uniform(*d_rg, size=[points_amount, 1])]), axis=1)
         d = np.random.uniform(*d_rg, size=[POINTS_AMOUNT, 1])  # Fill the distance range uniformly
 
         # Generate contour area for a class of noise, parameters are chosen empirically
         mu, sigma = 0.5, 0.1
-        ca = np.random.normal(mu, sigma, size=[POINTS_AMOUNT, 1]) * np.expand_dims(w_h[:, 0], axis=1) * np.expand_dims(
-            w_h[:, 1], axis=1)
+        ca = np.random.normal(mu, sigma, size=[POINTS_AMOUNT, 1]) * np.expand_dims(w_h[:, 0], axis=1) * \
+             np.expand_dims(w_h[:, 1], axis=1)
 
         res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle,
                          np.zeros((POINTS_AMOUNT, 1))))
