@@ -151,6 +151,7 @@ for angle, height in it_params:
 
         # Put all together
         iter_data = pd.DataFrame(res, columns=[w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k])
+        iter_data = iter_data.round({z_k: 2, ca_k: 3, w_k: 2, h_k: 2,  cam_y_k: 2, cam_a_k: 1})
         noise = noise.append(iter_data)
 
         it += 1
