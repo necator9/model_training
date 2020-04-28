@@ -12,7 +12,7 @@ from generate_features import get_status
 
 # Set up logging to stdout
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 ch = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(message)s')
 ch.setFormatter(formatter)
