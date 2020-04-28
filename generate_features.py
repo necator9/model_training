@@ -52,11 +52,12 @@ def init_iterator(sc, work_obj):
     return it, total_iter
 
 
+def get_status(i, total_iter):
+    return '{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter)
+
+
 # Worker function
 def generate_features(o_key, scene_key, save_q, stop_event):
-    def get_status(i, total_iter):
-        return '{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter)
-
     multiprocessing.current_process().name = o_key  # Set process name
     # Generate iterator from parameters in config
     work_obj = sp.obj_info[o_key]
