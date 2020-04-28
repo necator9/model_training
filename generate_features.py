@@ -144,6 +144,14 @@ def saver_thr(out_f, q, stop_event):
             break
 
 
+def del_if_exists(out_f):
+    if os.path.exists(out_f):
+        os.remove(out_f)
+        logger.warning('Previous output file removed: {} '.format(out_f))
+    else:
+        logger.info(' Output file: {}'.format(out_f))
+
+
 header = True
 if __name__ == '__main__':
     m = multiprocessing.Manager()
@@ -152,6 +160,7 @@ if __name__ == '__main__':
     data_save_q = m.Queue()
 
     out_file = sys.argv[1] if len(sys.argv) == 2 else 'default_filename.csv'
+    del_if_exists(out_file)
     saver = multiprocessing.Process(target=saver_thr, args=(out_file, data_save_q, stop_event_saver), name='saver')
     o_keys = sp.obj_info.keys()
     scene_key = sp.scene_info.keys()

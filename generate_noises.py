@@ -145,8 +145,6 @@ for angle, height in it_params:
 
         res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle))
 
-        logger.debug('Data to append: {}\nExisting columns: {}'.format(res.shape, [w_k, h_k, ca_k, z_k, cam_y_k,
-                                                                                   cam_a_k]))
         out_data_temp.extend(res.tolist())
 
         it += 1
@@ -157,9 +155,10 @@ for angle, height in it_params:
 
 dir_path = os.path.split(csv_file)[0]  # Extract dir path form input path
 in_file_name = os.path.split(csv_file)[1]  # Extract filename form input path
+out_file_name = os.path.join(dir_path, 'n_{}'.format(in_file_name))
 
-noise = pd.DataFrame(out_data_temp, columns=[w_k, h_k, ca_k, z_k, cam_a_k, cam_y_k])
+noise = pd.DataFrame(out_data_temp, columns=[w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k])
 noise[o_class_k] = 0
 
 noise = noise.round({z_k: 2, ca_k: 3, w_k: 2, h_k: 2, cam_y_k: 2, cam_a_k: 1, o_class_k: 0})
-noise.to_csv(os.path.join(dir_path, 'n_{}'.format(in_file_name)), index=False)
+noise.to_csv(out_file_name, index=False)
