@@ -12,7 +12,7 @@ from generate_features import get_status
 
 # Set up logging to stdout
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 formatter = logging.Formatter('%(asctime)s - %(message)s')
 ch.setFormatter(formatter)
@@ -145,6 +145,8 @@ for angle, height in it_params:
 
         res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle,
                          np.zeros((POINTS_AMOUNT, 1))))
+
+        logging.debug('Data to write: {}\nExisting columns: {}'.format(res, [w, h, ca, z, cam_y, cam_a, o_class]))
 
         # Put all together
         iter_data = pd.DataFrame(res, columns=[w, h, ca, z, cam_y, cam_a, o_class])
