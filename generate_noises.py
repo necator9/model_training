@@ -104,7 +104,7 @@ total_iterations = len(angle_rg) * len(height_rg)
 logger.info('Total iterations: {}'.format(total_iterations))
 logger.info('Camera height range: {}\nCamera angle range: {}'.format(height_rg, angle_rg))
 
-noise = pd.DataFrame(columns=[w_k, h_k, ca_k, z_k, cam_a_k, cam_y_k, o_class_k])
+out_data_temp = list()
 
 it = 0
 for angle, height in it_params:
@@ -143,15 +143,11 @@ for angle, height in it_params:
         ca = np.random.normal(mu, sigma, size=[POINTS_AMOUNT, 1]) * np.expand_dims(w_h[:, 0], axis=1) * \
              np.expand_dims(w_h[:, 1], axis=1)
 
-        res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle,
-                         np.zeros((POINTS_AMOUNT, 1))))
+        res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle))
 
-        logger.debug('Data to write: {}\nExisting columns: {}'.
-                         format(res.shape, [w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k]))
-
-        # Put all together
-        iter_data = pd.DataFrame(res, columns=[w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k])
-        noise = noise.append(iter_data)
+        logger.debug('Data to append: {}\nExisting columns: {}'.format(res.shape, [w_k, h_k, ca_k, z_k, cam_y_k,
+                                                                                   cam_a_k]))
+        out_data_temp.extend(res.tolist())
 
         it += 1
         logger.info(get_status(it, total_iterations))
@@ -161,6 +157,9 @@ for angle, height in it_params:
 
 dir_path = os.path.split(csv_file)[0]  # Extract dir path form input path
 in_file_name = os.path.split(csv_file)[1]  # Extract filename form input path
+
+noise = pd.DataFrame(out_data_temp, columns=[w_k, h_k, ca_k, z_k, cam_a_k, cam_y_k])
+noise[o_class_k] = 0
 
 noise = noise.round({z_k: 2, ca_k: 3, w_k: 2, h_k: 2, cam_y_k: 2, cam_a_k: 1, o_class_k: 0})
 noise.to_csv(os.path.join(dir_path, 'n_{}'.format(in_file_name)), index=False)
