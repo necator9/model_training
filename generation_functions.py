@@ -317,7 +317,7 @@ def write_to_csv(header_, data_, out_file):
                                       'rw_ca_est', 'o_name', 'o_class', 'ry', 'x_px', 'y_px', 'w_px', 'h_px', 'c_ar_px',
                                       'thr', 'dd'])
     df = df.round({"z_est": 2, "x_est": 2, "rw_ca_est": 3, "width_est": 2, "height_est": 2, 'x': 2, 'y': 2, 'z': 2,
-                  'cam_a': 1, 'ry': 1, 'ww': 2, 'hh': 2, 'dd': 2})
+                  'cam_a': 1, 'ry': 1, 'ww': 2, 'hh': 2, 'dd': 2, 'o_class': 0})
 
     with open(out_file, 'a') as f:
         df.to_csv(f, header=header_, index=False)
