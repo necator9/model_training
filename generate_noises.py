@@ -105,6 +105,7 @@ logger.info('Total iterations: {}'.format(total_iterations))
 logger.info('Camera height range: {}\nCamera angle range: {}'.format(height_rg, angle_rg))
 
 noise = pd.DataFrame(columns=[w_k, h_k, ca_k, z_k, cam_a_k, cam_y_k, o_class_k])
+noise = noise.round({z_k: 2, ca_k: 3, w_k: 2, h_k: 2, cam_y_k: 2, cam_a_k: 1, o_class_k: 0})
 
 it = 0
 for angle, height in it_params:
@@ -151,7 +152,6 @@ for angle, height in it_params:
 
         # Put all together
         iter_data = pd.DataFrame(res, columns=[w_k, h_k, ca_k, z_k, cam_y_k, cam_a_k, o_class_k])
-        iter_data = iter_data.round({z_k: 2, ca_k: 3, w_k: 2, h_k: 2,  cam_y_k: 2, cam_a_k: 1, o_class_k: 0})
         noise = noise.append(iter_data)
 
         it += 1
@@ -162,4 +162,5 @@ for angle, height in it_params:
 
 dir_path = os.path.split(csv_file)[0]  # Extract dir path form input path
 in_file_name = os.path.split(csv_file)[1]  # Extract filename form input path
+
 noise.to_csv(os.path.join(dir_path, 'n_{}'.format(in_file_name)), index=False)
