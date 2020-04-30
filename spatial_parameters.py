@@ -23,7 +23,7 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             'running-boy.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
                                 'ry_init': st_flip},
-            'standing_man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
+            'standing-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
                              'ry_init': st_flip},
             'cyclist-1.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                               'ry_init': 0},
