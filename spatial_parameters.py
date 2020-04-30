@@ -23,6 +23,8 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             'running-boy.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
                                 'ry_init': st_flip},
+            'standing_man': {'dim': {'prop': True, 'val': [[1, 1.4, 2, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
+                             'ry_init': st_flip},
             'cyclist-1.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                               'ry_init': 0},
             'pair-1.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 2,
@@ -44,9 +46,13 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
               '_for_plot': {'cam_angle': (-22, -23, -1), 'x_range': (-8, 10, 2), 'y_range': (-3.1, -3.2, -0.1),
                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                             'thr_range': (1, 26, 12)},
-              'rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
+              '_rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
+                            'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                            'thr_range': (1, 26, 12)},
+              'sel_sc': {'cam_angle': (-13, -16, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -3.5, -0.5),
                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                             'thr_range': (1, 26, 12)}
+
               }
 
 

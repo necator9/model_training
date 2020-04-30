@@ -98,6 +98,7 @@ def generate_features(o_key, scene_key, save_q, stop_event):
                 prev_rx, prev_y = cam_a, y
             # Extract features from contours and bounding rectangles
             z_est, x_est, width_est, height_est, rw_ca_est = pc.extract_features(c_ar, b_rect)
+
             # Get actual object shape from feature extractor instance
             shape_mtx = [mtx for mtx in rw_system.mtx_seq if isinstance(mtx, gf.ScaleMtx)]
             ww, hh, dd, = shape_mtx[0].shape_cursor

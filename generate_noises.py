@@ -25,9 +25,9 @@ def get_hull(cnt_data):
     :param cnt_data: n-dim array of features
     :return: convex hull wrapping the features
     """
-    hull = ConvexHull(cnt_data)
-    hull = cnt_data[hull.vertices, :]
-    hull = Delaunay(hull)
+    hull = ConvexHull(cnt_data)  # Get indices of external vertices
+    hull = cnt_data[hull.vertices, :]  # Extract points by their indices
+    hull = Delaunay(hull)  # The Delaunay class has a method to check if a point belongs to a hull
 
     return hull
 
