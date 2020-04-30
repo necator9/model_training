@@ -94,7 +94,7 @@ def clean_by_margin(df_data_or, b_rec_k, margin=1, img_res=(1280, 720)):
     return df_data_p
 
 
-POINTS_AMOUNT = 3000
+POINTS_AMOUNT = 5000
 
 # Mapping of keys in csv file
 b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')
