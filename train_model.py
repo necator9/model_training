@@ -29,8 +29,9 @@ logger.addHandler(ch)
 logger.addHandler(file_handler)
 
 
-if len(sys.argv) != 3:
-    print('Usage: ./script path_to_features.csv path_to_noises.csv classifier_path_name')
+if len(sys.argv) != 4:
+    print('\n\nUsage: ./script [path_to_features.csv] [path_to_noises.csv] [classifier_path_name]\n'
+          'All arguments are obligatory.\n')
     sys.exit()
 
 # Mapping the keys in csv file
