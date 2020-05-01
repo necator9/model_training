@@ -55,10 +55,11 @@ logger.info('Data shape: {}'.format(dt.shape))
 logger.info('Cases: {}, {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
 
 # Prepare data for training
-training_data = np.vstack((dt[w_k], dt[h_k], dt[ca_k], dt[z_k], dt[cam_y_k], dt[cam_a_k])).T  # All meaningful features
+# All meaningful features
+training_data = np.stack((dt[w_k], dt[h_k], dt[ca_k], dt[z_k], dt[cam_y_k], dt[cam_a_k]), axis=1)
 features_cols = [0, 1, 2, 3, 4, 5]  # Features column idx to take into account
 X_train = training_data[:, features_cols]
-y_train = dt[o_class_k]
+y_train = dt[o_class_k].values
 
 poly = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
 X_train = poly.fit_transform(X_train)
