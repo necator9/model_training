@@ -9,6 +9,7 @@ import sys
 import os
 
 from generate_features import get_status
+import generation_functions as gf
 
 # Set up logging to stdout
 logger = logging.getLogger(__name__)
@@ -79,21 +80,6 @@ def gen_w_h(hulls_, points_amount_, w_rg_, h_rg_):
                 return np.array(noises)
 
 
-def clean_by_margin(df_data_or, b_rec_k, margin=1, img_res=(1280, 720)):
-    """
-    # Remove objects which have intersections with frame borders
-    :param df_data_or: Input dataframe to filter
-    :param b_rec_k: Parameters of a bounding rectangle on image plane
-    :param margin: Offset from horizontal and vertical frame borders
-    :param img_res: Working image resolution
-    :return: filtered dataframe
-    """
-    x_px, y_px, w_px, h_px = b_rec_k
-    df_data_p = df_data_or[(df_data_or[x_px] > margin) & (df_data_or[x_px] + df_data_or[w_px] < img_res[0] - margin) &
-                           (df_data_or[y_px] > margin) & (df_data_or[y_px] + df_data_or[h_px] < img_res[1] - margin)]
-    return df_data_p
-
-
 POINTS_AMOUNT = 5000
 
 # Mapping of keys in csv file
@@ -108,7 +94,7 @@ z_k = 'z_est'             # Feature - estimated object distance from a camera
 o_class_k = 'o_class'     # Object class as an integer, where 0 is a noise class
 
 csv_file = sys.argv[1]  # Path to targeted csv file passed as cl argument
-obj_features = clean_by_margin(pd.read_csv(csv_file), b_rec_k)  # Read generated features
+obj_features = gf.clean_by_margin(pd.read_csv(csv_file), b_rec_k)  # Read generated features
 # Find available camera angles and heights
 angle_rg = obj_features[cam_a_k].unique()
 height_rg = obj_features[cam_y_k].unique()
@@ -160,7 +146,6 @@ for angle, height in it_params:
              np.expand_dims(w_h[:, 1], axis=1)
 
         res = np.hstack((w_h, ca, d, np.ones((POINTS_AMOUNT, 1)) * height, np.ones((POINTS_AMOUNT, 1)) * angle))
-
         out_data_temp.extend(res.tolist())
 
         it += 1
