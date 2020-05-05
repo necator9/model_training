@@ -1,20 +1,32 @@
+#!/usr/bin/env python3.7
+
+# Created by Ivan Matveev at 01.05.20
+# E-mail: ivan.matveev@hs-anhalt.de
+
+# Configuration file containing parameters for script of synthetic data generation
+
+
 # If logging level is DEBUG (10), the dict keys are starting with "test*" are be processed.
 # The rendered images will be shown on each iteration.
 # If logging level is higher, e.g. INFO (20), the keys excluding "test*" are processed.
 # In this case, no images will be rendered and the data stored in *.csv file.
-# The keys starting with "_" are ignored in both scenarios
+# The keys starting with "_" are ignored in both scenarios. Used to keep possibly useful parameters that
+# were used previously.
 
 loglevel = 20
+obj_dir_path = 'obj/'  # Directory containing preliminary prepared objects in wavefront.obj format
 
+st_ry = (0, 90, 5)  # Standard range of object rotation angles about y axis (movement direction imitation)
+st_flip = 180   # Initial offset of r_y (some objects are initially rotated by back to a camera)
 
-# key 'dim': [[dimension-id, lower-border, higher-border, amount-of-points-between]],
+# Object transformation parameters
+# main key '*.obj': corresponds to name of .obj file
+# key 'dim':
+#  - key 'val': [[dimension-id, lower-border, higher-border, amount-of-points-between]],
 # where dimension-id lies in range [0, 1, 2] that correspond to [X, Y, Z] (object width, height, depth)
-
-obj_dir_path = 'obj/'
-
-st_ry = (0, 90, 5)
-st_flip = 180
-
+#  - key 'prop' - scale object proportionally in all dimensions
+# key 'rotate_y': see description above for st_ry variable
+# key 'ry_init': see description above  st_flip variable
 
 obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
                                 'ry_init': st_flip},
@@ -23,19 +35,31 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
             'running-boy.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
                                 'ry_init': st_flip},
             'standing-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]]}, 'rotate_y': st_ry, 'o_class': 1,
-                             'ry_init': st_flip},
+                                 'ry_init': st_flip},
             'cyclist-1.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                               'ry_init': 0},
             '_pair-1.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 2,
-                           'ry_init': st_flip},
+                            'ry_init': st_flip},
             '_pair-2.obj': {'dim': {'prop': True, 'val': [[1, 1.65, 2.1, 9]]}, 'rotate_y': st_ry, 'o_class': 2,
-                           'ry_init': st_flip},
+                            'ry_init': st_flip},
             'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 4,
                           'ry_init': st_flip},
             'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.52, 1.52, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
                              'ry_init': st_flip}}
 
 
+# Parameters of scene to be generated.
+# Parameters which are given by range are passed to np.arrange function
+# main key '*': just a name
+# key 'cam_angle': camera incline towards to ground surface: 0 deg. - the camera is parallel to the ground surface;
+# -90 deg. - camera points perpendicularly down
+# key 'x_range': object coordinates in meters along x axis (left, right relatively camera)
+# key 'y_range': ground surface coordinates in meters relatively to a camera origin (e.g. -5 is 5m of camera height)
+# key 'z_range': distance to an object from camera in meters
+# key 'img_res': resulting image resolution (width, height) in pixels
+# key 'f_l': a camera focal length in mm
+# key 'sens_dim': physical camera's sensor dimensions in mm (width, height)
+# key 'thr_range': size of a kernel for morphological dilate on the resulting mask to imitate real images motion blur
 scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_range': (-2, -7, -0.2),
                            'z_range': (1, 30, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                            'thr_range': (1, 26, 12)},
@@ -46,16 +70,14 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                             'thr_range': (1, 26, 12)},
               '_rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
-                            'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                            'thr_range': (1, 26, 12)},
+                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                             'thr_range': (1, 26, 12)},
               'all_scenes': {'cam_angle': (-0, -95, -5), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.5, -0.5),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                              'thr_range': (1, 26, 12)},
               '_sel_sc': {'cam_angle': (-13, -16, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -3.5, -0.5),
-                            'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                            'thr_range': (1, 26, 12)}
-
-              }
+                          'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                          'thr_range': (1, 26, 12)}}
 
 
 
