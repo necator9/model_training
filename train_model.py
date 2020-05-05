@@ -3,7 +3,7 @@
 # Created by Ivan Matveev at 01.05.20
 # E-mail: ivan.matveev@hs-anhalt.de
 
-# Train a logistic regression classifier based on previously generated data
+# Train a logistic regression classifier based on previously generated data (target objects + noises)
 
 import sys
 import pickle
@@ -12,6 +12,8 @@ import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
+
+import config as sp
 
 
 # Set up logging,
@@ -49,17 +51,6 @@ def clean_by_margin(df_data_or, b_rec_k, margin=1, img_res=(1280, 720)):
     return df_data_p
 
 
-# Mapping the keys in csv file
-cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
-# 0 deg. - the camera is parallel to the ground surface; -90 deg. - camera points perpendicularly down
-cam_y_k = 'y'             # Ground surface offset (negative camera height) relative to camera origin in range [-3, -n] m
-w_k = 'width_est'         # Feature - estimated object width
-h_k = 'height_est'        # Feature - estimated object height
-ca_k = 'rw_ca_est'        # Feature - estimated object contour area
-z_k = 'z_est'             # Feature - estimated object distance from a camera
-o_class_k = 'o_class'     # Object class as an integer, where 0 is a noise class
-o_name_k = 'o_name'       # Object name as a string
-
 # Read the source data and filter it
 target_df = pd.read_csv(sys.argv[1])
 noises_df = pd.read_csv(sys.argv[2])
@@ -67,14 +58,14 @@ b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')
 target_df = clean_by_margin(target_df, b_rec_k)
 dt = pd.concat([noises_df, target_df])
 logger.info('Data shape: {}'.format(dt.shape))
-logger.info('Cases: angles {}, heights {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
+logger.info('Cases: angles {}, heights {}'.format(dt[sp.cam_a_k].unique(), dt[sp.cam_y_k].unique()))
 
 # Prepare data for training
 # All meaningful features
-training_data = np.stack((dt[w_k], dt[h_k], dt[ca_k], dt[z_k], dt[cam_y_k], dt[cam_a_k]), axis=1)
+training_data = np.stack((dt[sp.w_k], dt[sp.h_k], dt[sp.ca_k], dt[sp.z_k], dt[sp.cam_y_k], dt[sp.cam_a_k]), axis=1)
 features_cols = [0, 1, 2, 3, 4, 5]  # Features column idx to take into account
 X_train = training_data[:, features_cols]
-y_train = dt[o_class_k]
+y_train = dt[sp.o_class_k]
 
 poly = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
 X_train = poly.fit_transform(X_train)

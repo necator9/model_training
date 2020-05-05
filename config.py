@@ -13,7 +13,7 @@
 # The keys starting with "_" are ignored in both scenarios. Used to keep possibly useful parameters that
 # were used previously.
 
-loglevel = 20
+loglevel = 10
 obj_dir_path = 'obj/'  # Directory containing preliminary prepared objects in wavefront.obj format
 
 st_ry = (0, 90, 5)  # Standard range of object rotation angles about y axis (movement direction imitation)
@@ -79,7 +79,13 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
                           'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                           'thr_range': (1, 26, 12)}}
 
-
-
-
-
+# Mapping the most important columns' names in csv file
+cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
+cam_y_k = 'y'             # Ground surface offset (negative camera height) relative to camera origin in range [-3, -n] m
+w_k = 'width_est'         # Feature - estimated object width
+h_k = 'height_est'        # Feature - estimated object height
+ca_k = 'rw_ca_est'        # Feature - estimated object contour area
+z_k = 'z_est'             # Feature - estimated object distance from a camera
+o_class_k = 'o_class'     # Object class as an integer, where 0 is a noise class
+o_name_k = 'o_name'       # Object name as a string
+b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')  # Parameters of a bounding rectangle
