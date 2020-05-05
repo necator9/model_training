@@ -72,14 +72,14 @@ logger.info('Cases: {}, {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
 
 # Prepare data for training
 # All meaningful features
-training_data = np.stack((dt[w_k], dt[h_k], dt[ca_k], dt[z_k], dt[cam_y_k], dt[cam_a_k], dt[o_class_k]), axis=1)
-X_train, X_test, y_train, y_test = train_test_split(training_data[:, :-1], training_data[:, -1],
-                                                    test_size=.3, random_state=42)
+training_data = np.stack((dt[w_k], dt[h_k], dt[ca_k], dt[z_k], dt[cam_y_k], dt[cam_a_k]), axis=1)
 features_cols = [0, 1, 2, 3, 4, 5]  # Features column idx to take into account
-X_train = X_train[:, features_cols]
+X_train = training_data[:, features_cols]
+y_train = dt[o_class_k]
 
 poly = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
 X_train = poly.fit_transform(X_train)
+
 # Init classifier
 clf = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1)
 logger.info('Starting the classifier training')
