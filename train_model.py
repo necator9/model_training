@@ -11,7 +11,6 @@ import logging
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 
 
@@ -68,7 +67,7 @@ b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')
 target_df = clean_by_margin(target_df, b_rec_k)
 dt = pd.concat([noises_df, target_df])
 logger.info('Data shape: {}'.format(dt.shape))
-logger.info('Cases: {}, {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
+logger.info('Cases: angles {}, heights {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
 
 # Prepare data for training
 # All meaningful features
