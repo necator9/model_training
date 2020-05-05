@@ -14,7 +14,6 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import PolynomialFeatures
 
-import generation_functions as gf
 
 # Set up logging,
 logger = logging.getLogger(__name__)
@@ -35,6 +34,22 @@ if len(sys.argv) != 4:
           'All arguments are obligatory.\n')
     sys.exit()
 
+
+def clean_by_margin(df_data_or, b_rec_k, margin=1, img_res=(1280, 720)):
+    """
+    # Remove objects which have intersections with frame borders
+    :param df_data_or: Input dataframe to filter
+    :param b_rec_k: Parameters of a bounding rectangle on image plane
+    :param margin: Offset from horizontal and vertical frame borders
+    :param img_res: Working image resolution
+    :return: filtered dataframe
+    """
+    x_px, y_px, w_px, h_px = b_rec_k
+    df_data_p = df_data_or[(df_data_or[x_px] > margin) & (df_data_or[x_px] + df_data_or[w_px] < img_res[0] - margin) &
+                           (df_data_or[y_px] > margin) & (df_data_or[y_px] + df_data_or[h_px] < img_res[1] - margin)]
+    return df_data_p
+
+
 # Mapping the keys in csv file
 cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
 # 0 deg. - the camera is parallel to the ground surface; -90 deg. - camera points perpendicularly down
@@ -50,7 +65,7 @@ o_name_k = 'o_name'       # Object name as a string
 target_df = pd.read_csv(sys.argv[1])
 noises_df = pd.read_csv(sys.argv[2])
 b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')
-target_df = gf.clean_by_margin(target_df, b_rec_k)
+target_df = clean_by_margin(target_df, b_rec_k)
 dt = pd.concat([noises_df, target_df])
 logger.info('Data shape: {}'.format(dt.shape))
 logger.info('Cases: {}, {}'.format(dt[cam_a_k].unique(), dt[cam_y_k].unique()))
@@ -73,4 +88,4 @@ clf.fit(X_train, y_train)
 with open(sys.argv[3] + '_clf.pcl', 'wb') as handle:
     pickle.dump(clf, handle, protocol=pickle.HIGHEST_PROTOCOL)
 with open(sys.argv[3] + '_poly.pcl', 'wb') as handle:
-    pickle.dump(clf, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    pickle.dump(poly, handle, protocol=pickle.HIGHEST_PROTOCOL)
