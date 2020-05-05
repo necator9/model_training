@@ -80,7 +80,7 @@ X_train = X_train[:, features_cols]
 poly = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
 X_train = poly.fit_transform(X_train)
 
-clf = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100)  # Init classifier
+clf = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=1000)  # Init classifier
 logger.info('Starting the classifier training')
 clf.fit(X_train, y_train)
 
