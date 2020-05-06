@@ -6,7 +6,7 @@
 # Configuration file containing parameters for script of synthetic data generation
 
 
-# If logging level is DEBUG (10), the dict keys are starting with "test*" are be processed.
+# If logging level is DEBUG (10), the dict keys are starting with "test*" are processed.
 # The rendered images will be shown on each iteration.
 # If logging level is higher, e.g. INFO (20), the keys excluding "test*" are processed.
 # In this case, no images will be rendered and the data stored in *.csv file.
@@ -72,7 +72,10 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
               '_rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                              'thr_range': (1, 26, 12)},
-              'all_scenes': {'cam_angle': (-0, -95, -5), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.5, -0.5),
+              '_all_scenes': {'cam_angle': (-0, -95, -5), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.5, -0.5),
+                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                             'thr_range': (1, 26, 12)},
+              'all_scenes_detailed': {'cam_angle': (-0, -92, -2), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.2, -0.2),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                              'thr_range': (1, 26, 12)},
               '_sel_sc': {'cam_angle': (-13, -16, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -3.5, -0.5),
