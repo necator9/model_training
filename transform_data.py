@@ -8,6 +8,13 @@ import config as cf  # Columns names are used from the config file
 
 
 def write_to_csv(header_, data_, out_file):
+    """
+    Round values and write to csv file. Function can be called multiple times in cycle appending data
+    :param header_: Boolean status of writing columns' names (only first time is true)
+    :param data_: dataframe to write
+    :param out_file: path with name to csv file
+    :return: header status. Once header have been written, the status changed to False
+    """
     x_px_k, y_px_k, w_px_k, h_px_k = cf.b_rec_k
     df = pd.DataFrame(data_, columns=[cf.cam_a_k, cf.cam_y_k, cf.z_k, 'z', 'x_est', 'x', cf.w_k, 'ww', cf.h_k, 'hh',
                                       cf.ca_k, cf.o_name_k, cf.o_class_k, 'ry', x_px_k, y_px_k, w_px_k, h_px_k,
@@ -34,4 +41,3 @@ def clean_by_margin(df_data_or, margin=1, img_res=(1280, 720)):
                            (df_data_or[y_px_k] > margin) &
                            (df_data_or[y_px_k] + df_data_or[h_px_k] < img_res[1] - margin)]
     return df_data_p
-
