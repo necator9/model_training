@@ -14,6 +14,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 
 import config as sp
+import lib_transform_data as tdata
 
 
 # Set up logging,
@@ -36,47 +37,65 @@ if len(sys.argv) != 4:
     sys.exit()
 
 
-def clean_by_margin(df_data_or, b_rec_k, margin=1, img_res=(1280, 720)):
+def read_dataframe(target_df_path, noises_df_path):
     """
-    # Remove objects which have intersections with frame borders
-    :param df_data_or: Input dataframe to filter
-    :param b_rec_k: Parameters of a bounding rectangle on image plane
-    :param margin: Offset from horizontal and vertical frame borders
-    :param img_res: Working image resolution
-    :return: filtered dataframe
+    Read the source training data from files and filter it
+    :param target_df_path: path to csv file containing objects' features
+    :param noises_df_path: path to csv file containing noises' features
+    :return: filtered and merged dataframe
     """
-    x_px, y_px, w_px, h_px = b_rec_k
-    df_data_p = df_data_or[(df_data_or[x_px] > margin) & (df_data_or[x_px] + df_data_or[w_px] < img_res[0] - margin) &
-                           (df_data_or[y_px] > margin) & (df_data_or[y_px] + df_data_or[h_px] < img_res[1] - margin)]
-    return df_data_p
+    target_df = pd.read_csv(target_df_path)
+    noises_df = pd.read_csv(noises_df_path)
+    target_df = tdata.clean_by_margin(target_df)
+    full_dataframe = pd.concat([noises_df, target_df])
+
+    logger.info('Input data shape: {}'.format(dt.shape))
+    logger.info('Cases: angles {}, heights {}'.format(dt[sp.cam_a_k].unique(), dt[sp.cam_y_k].unique()))
+
+    return full_dataframe
 
 
-# Read the source data and filter it
-target_df = pd.read_csv(sys.argv[1])
-noises_df = pd.read_csv(sys.argv[2])
-b_rec_k = ('x_px', 'y_px', 'w_px', 'h_px')
-target_df = clean_by_margin(target_df, b_rec_k)
-dt = pd.concat([noises_df, target_df])
-logger.info('Data shape: {}'.format(dt.shape))
-logger.info('Cases: angles {}, heights {}'.format(dt[sp.cam_a_k].unique(), dt[sp.cam_y_k].unique()))
+def prepare_data_for_training(full_dataframe, features_cols=(0, 1, 2, 3, 4, 5)):
+    """
+    Prepare data for model fitting: select important features from dataframe and merge them into numpy array
+    :param full_dataframe: dataframe describing target and noises classes
+    :param features_cols: features indices to take into account
+    :return: features, labels
+    """
+    # All meaningful features
+    training_data = np.stack((full_dataframe[sp.w_k], full_dataframe[sp.h_k], full_dataframe[sp.ca_k],
+                              full_dataframe[sp.z_k], full_dataframe[sp.cam_y_k], full_dataframe[sp.cam_a_k]), axis=1)
+    x_tr = training_data[:, features_cols]
+    y_tr = full_dataframe[sp.o_class_k]
 
-# Prepare data for training
-# All meaningful features
-training_data = np.stack((dt[sp.w_k], dt[sp.h_k], dt[sp.ca_k], dt[sp.z_k], dt[sp.cam_y_k], dt[sp.cam_a_k]), axis=1)
-features_cols = [0, 1, 2, 3, 4, 5]  # Features column idx to take into account
-X_train = training_data[:, features_cols]
-y_train = dt[sp.o_class_k]
+    poly_scale = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
+    x_tr = poly_scale.fit_transform(x_tr)
 
-poly = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
-X_train = poly.fit_transform(X_train)
+    return x_tr, y_tr, poly_scale
 
-# Init classifier
-clf = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1)
-logger.info('Starting the classifier training')
-clf.fit(X_train, y_train)
 
-# Dump objects of classifier and polynomial transformer to files
-with open(sys.argv[3] + '_clf.pcl', 'wb') as handle:
-    pickle.dump(clf, handle, protocol=pickle.HIGHEST_PROTOCOL)
-with open(sys.argv[3] + '_poly.pcl', 'wb') as handle:
-    pickle.dump(poly, handle, protocol=pickle.HIGHEST_PROTOCOL)
+def train_cassifier(x_tr, y_tr):
+    """
+    Fit the classifier model using given features and labels
+    :param x_tr: features
+    :param y_tr: labels
+    :return: instance of the trained model
+    """
+    # Init classifier
+    log_reg = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1)
+    logger.info('Starting the classifier training')
+    log_reg.fit(x_tr, y_tr)
+
+    return log_reg
+
+
+if __name__ == '__main__':
+    dt = read_dataframe(sys.argv[1], sys.argv[2])
+    X_train, y_train, poly = prepare_data_for_training(dt)
+    clf = train_cassifier(X_train, y_train)
+
+    # Dump objects of classifier and polynomial transformer to files
+    with open(sys.argv[3] + '_clf.pcl', 'wb') as handle:
+        pickle.dump(clf, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with open(sys.argv[3] + '_poly.pcl', 'wb') as handle:
+        pickle.dump(poly, handle, protocol=pickle.HIGHEST_PROTOCOL)
