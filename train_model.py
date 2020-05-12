@@ -49,8 +49,9 @@ def read_dataframe(target_df_path, noises_df_path):
     target_df = tdata.clean_by_margin(target_df)
     full_dataframe = pd.concat([noises_df, target_df])
 
-    logger.info('Input data shape: {}'.format(dt.shape))
-    logger.info('Cases: angles {}, heights {}'.format(dt[cf.cam_a_k].unique(), dt[cf.cam_y_k].unique()))
+    logger.info('Input data shape: {}'.format(full_dataframe.shape))
+    logger.info('Cases: angles {}, heights {}'.format(full_dataframe[cf.cam_a_k].unique(),
+                                                      full_dataframe[cf.cam_y_k].unique()))
 
     return full_dataframe
 
