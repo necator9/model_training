@@ -20,7 +20,7 @@ import lib_transform_data as tdata
 # Set up logging,
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler('generator.log')
+file_handler = logging.FileHandler(__name__ + '.log')
 ch = logging.StreamHandler()
 
 formatter = logging.Formatter('%(asctime)s - %(message)s')

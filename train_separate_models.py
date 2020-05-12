@@ -5,11 +5,25 @@
 
 import sys
 import itertools
+import logging
 
 import train_model as tm
 import lib_transform_data as tdata
 import config as cf
 from joblib import Parallel, delayed, cpu_count
+
+# Set up logging,
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+file_handler = logging.FileHandler(__name__ + '.log')
+ch = logging.StreamHandler()
+
+formatter = logging.Formatter('%(asctime)s - %(message)s')
+file_handler.setFormatter(formatter)
+ch.setFormatter(formatter)
+
+logger.addHandler(ch)
+logger.addHandler(file_handler)
 
 
 def select_slice(dataframe, keys_vals):
@@ -21,6 +35,9 @@ def select_slice(dataframe, keys_vals):
     """
     for key, val in keys_vals.items():
         dataframe = dataframe[dataframe[key] == val]
+
+    if dataframe.shape[0] < 10:
+        logger.warning("Amount of rows in dataframe is not sufficient")
 
     return dataframe
 
