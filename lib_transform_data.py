@@ -3,7 +3,9 @@
 
 # Functions for data manipulations: filtration, writing to file
 
+import pickle
 import pandas as pd
+
 import config as cf  # Columns names are used from the config file
 
 
@@ -25,6 +27,16 @@ def write_to_csv(header_, data_, out_file):
         df.to_csv(f, header=header_, index=False)
 
     return False
+
+
+def dump_object(path, obj):
+    """
+    Dump object by serialization to file
+    :param path: path to file
+    :param obj: object to save
+    """
+    with open(path, 'wb') as handle:
+        pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def clean_by_margin(df_data_or, margin=1, img_res=(1280, 720)):

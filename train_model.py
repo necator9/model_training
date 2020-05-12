@@ -13,7 +13,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 
-import config as sp
+import config as cf
 import lib_transform_data as tdata
 
 
@@ -50,12 +50,12 @@ def read_dataframe(target_df_path, noises_df_path):
     full_dataframe = pd.concat([noises_df, target_df])
 
     logger.info('Input data shape: {}'.format(dt.shape))
-    logger.info('Cases: angles {}, heights {}'.format(dt[sp.cam_a_k].unique(), dt[sp.cam_y_k].unique()))
+    logger.info('Cases: angles {}, heights {}'.format(dt[cf.cam_a_k].unique(), dt[cf.cam_y_k].unique()))
 
     return full_dataframe
 
 
-def prepare_data_for_training(full_dataframe, features_cols=(0, 1, 2, 3, 4, 5)):
+def prepare_data_for_training(full_dataframe, features_cols):
     """
     Prepare data for model fitting: select important features from dataframe and merge them into numpy array
     :param full_dataframe: dataframe describing target and noises classes
@@ -63,10 +63,8 @@ def prepare_data_for_training(full_dataframe, features_cols=(0, 1, 2, 3, 4, 5)):
     :return: features, labels
     """
     # All meaningful features
-    training_data = np.stack((full_dataframe[sp.w_k], full_dataframe[sp.h_k], full_dataframe[sp.ca_k],
-                              full_dataframe[sp.z_k], full_dataframe[sp.cam_y_k], full_dataframe[sp.cam_a_k]), axis=1)
-    x_tr = training_data[:, features_cols]
-    y_tr = full_dataframe[sp.o_class_k]
+    x_tr = np.stack([full_dataframe[key] for key in features_cols], axis=1)
+    y_tr = full_dataframe[cf.o_class_k]
 
     poly_scale = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
     x_tr = poly_scale.fit_transform(x_tr)
@@ -90,12 +88,15 @@ def train_cassifier(x_tr, y_tr):
 
 
 if __name__ == '__main__':
+    """
+    Train a single classifier for all given camera angle/height scenarios
+    """
     dt = read_dataframe(sys.argv[1], sys.argv[2])
-    X_train, y_train, poly = prepare_data_for_training(dt)
+    # Name of columns are used for training
+    feature_vector = [cf.w_k, cf.h_k, cf.ca_k, cf.z_k, cf.cam_y_k, cf.cam_a_k]
+    X_train, y_train, poly = prepare_data_for_training(dt, feature_vector)
     clf = train_cassifier(X_train, y_train)
 
     # Dump objects of classifier and polynomial transformer to files
-    with open(sys.argv[3] + '_clf.pcl', 'wb') as handle:
-        pickle.dump(clf, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    with open(sys.argv[3] + '_poly.pcl', 'wb') as handle:
-        pickle.dump(poly, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    tdata.dump_object(sys.argv[3] + '_clf.pcl', clf)
+    tdata.dump_object(sys.argv[3] + '_poly.pcl', poly)
