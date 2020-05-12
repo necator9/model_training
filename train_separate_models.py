@@ -36,8 +36,10 @@ def select_slice(dataframe, keys_vals):
     for key, val in keys_vals.items():
         dataframe = dataframe[dataframe[key] == val]
 
-    if dataframe.shape[0] < 10:
-        logger.warning("Amount of rows in dataframe is not sufficient")
+    if dataframe.shape[0] < 100:
+        logger.warning("Amount of rows in dataframe is not sufficient. "
+                       "Scene: {}\nSkipping the scene".format([(key, val) for key, val in keys_vals.items()]))
+        return None
 
     return dataframe
 
@@ -85,6 +87,7 @@ h_a_it = itertools.product(heights, angles)
 
 # Prepared training data for training in parallel: split it by height and angles cases
 iterate = [[height, angle, select_slice(dt, {cf.cam_y_k: height, cf.cam_a_k: angle})] for height, angle in h_a_it]
+iterate = [[height, angle, df] for height, angle, df in iterate if df is None]
 # Run jobs in parallel
 result = Parallel(n_jobs=cpu_count())(delayed(train_single_clf)(height, angle, dataframe)
                                       for height, angle, dataframe in iterate)
