@@ -10,7 +10,7 @@ import logging
 import train_model as tm
 import lib_transform_data as tdata
 import config as cf
-from joblib import Parallel, delayed, cpu_count
+from joblib import Parallel, delayed
 
 # Set up logging,
 logger = logging.getLogger(__name__)
@@ -89,8 +89,8 @@ h_a_it = itertools.product(heights, angles)
 iterate = [[height, angle, select_slice(dt, {cf.cam_y_k: height, cf.cam_a_k: angle})] for height, angle in h_a_it]
 # Drop cases with insufficient data filling, which are marked as None
 iterate = [[height, angle, df] for height, angle, df in iterate if df is not None]
-# Run jobs in parallel
-result = Parallel(n_jobs=cpu_count())(delayed(train_single_clf)(height, angle, dataframe)
+# Run jobs in parallel using all the cores
+result = Parallel(n_jobs=-1)(delayed(train_single_clf)(height, angle, dataframe)
                                       for height, angle, dataframe in iterate)
 
 result_dict = build_dictionary(result)
