@@ -69,8 +69,8 @@ h_a_it = itertools.product(heights, angles)
 # Prepared training data for training in parallel: split it by height and angles cases
 iterate = [[height, angle, select_slice(dt, {cf.cam_y_k: height, cf.cam_a_k: angle})] for height, angle in h_a_it]
 # Run jobs in parallel
-result = Parallel(n_jobs=cpu_count)(delayed(train_single_clf)(height, angle, dataframe)
-                                    for height, angle, dataframe in iterate)
+result = Parallel(n_jobs=cpu_count())(delayed(train_single_clf)(height, angle, dataframe)
+                                      for height, angle, dataframe in iterate)
 
 result_dict = build_dictionary(result)
 # Dump dictionary with multiple training cases
