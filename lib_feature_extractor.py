@@ -51,7 +51,7 @@ class FeatureExtractor(object):
         px_x_l_r = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords
         # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
         x_lr_yb_hom = np.stack((px_x_l_r,
-                                np.repeat(px_y_bottom_top[:, 0], 2),
+                                np.tile(px_y_bottom_top[:, 0], 2),
                                 np.ones(2 * px_y_bottom_top.shape[0])), axis=1)
 
         # * Find object coordinates in real world
@@ -78,7 +78,7 @@ class FeatureExtractor(object):
     def estimate_3d_coordinates(self, x_lr_yb_hom, distance):
         # Z cam is a scaling factor which is needed for 3D reconstruction
         z_cam_coords = self.cam_h * np.sin(self.r_x) + distance * np.cos(self.r_x)
-        z_cam_coords = np.expand_dims(np.repeat(z_cam_coords, 2), axis=0).T
+        z_cam_coords = np.expand_dims(np.tile(z_cam_coords, 2), axis=0).T
         cam_xlr_yb_h = x_lr_yb_hom * z_cam_coords
 
         # Transform from image plan to camera coordinate system
