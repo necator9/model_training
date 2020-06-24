@@ -13,7 +13,7 @@
 # The keys starting with "_" are ignored in both scenarios. Used to keep possibly useful parameters that
 # were used previously.
 
-loglevel = 20
+loglevel = 10
 obj_dir_path = 'obj/'  # Directory containing preliminary prepared objects in wavefront.obj format
 
 st_ry = (0, 90, 5)  # Standard range of object rotation angles about y axis (movement direction imitation)
@@ -44,8 +44,8 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                           'ry_init': st_flip},
-            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.52, 1.52, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
-                             'ry_init': st_flip}}
+            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.85, 1.85, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
+                             'ry_init': 0}}
 
 
 # Parameters of scene to be generated.
@@ -63,8 +63,11 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
 scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_range': (-2, -7, -0.2),
                            'z_range': (1, 30, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                            'thr_range': (1, 26, 12)},
-              'test_1': {'cam_angle': (-22, -23, -1), 'x_range': (-2, -1, 1), 'y_range': (-3.2, -3.3, -0.1),
-                         'z_range': (13, 14, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+              '_test_1': {'cam_angle': (-22, -23, -1), 'x_range': (-2, -1, 1), 'y_range': (-3.2, -3.3, -0.1),
+                          'z_range': (13, 14, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
+                          'thr_range': (1, 2, 1)},
+              'test_2': {'cam_angle': (-36, -37, -1), 'x_range': (0, 1, 1), 'y_range': (-3.2, -3.3, -0.1),
+                         'z_range': (11, 12, 1), 'img_res': (1024, 768), 'f_l': 2.2, 'sens_dim': (3.66, 2.76),
                          'thr_range': (1, 2, 1)},
               '_for_plot': {'cam_angle': (-22, -23, -1), 'x_range': (-8, 10, 2), 'y_range': (-3.1, -3.2, -0.1),
                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
