@@ -82,10 +82,7 @@ def init_iterator(sc, work_obj):
     dim_mask = build_dims_mask(work_obj['dim']['val'])
     dim_ranges = gen_dims_ranges(dim_mask)
     rotate_y_rg = np.linspace(*work_obj['rotate_y'])
-    try:
-        cam_angles = np.arange(*sc['cam_angle'])
-    except TypeError:
-        print(*sc['cam_angle'], sc, work_obj)
+    cam_angles = np.arange(*sc['cam_angle'])
     x_range = np.arange(*sc['x_range'])
     y_range = np.arange(*sc['y_range'])
     z_range = np.arange(*sc['z_range'])
@@ -110,7 +107,10 @@ def generate_features(o_key, sc_key, save_q, stop_event):
     # Generate iterator from parameters in config
     work_obj = sp.obj_info[o_key]
     sc = sp.scene_info[sc_key]
-    it, total_iter = init_iterator(sc, work_obj)
+    try:
+        it, total_iter = init_iterator(sc, work_obj)
+    except Exception:
+        print(o_key, sc_key, sc['cam_angle'])
     logger.info("Total iterations: {}".format(total_iter))
 
     is_prop = work_obj['dim']['prop']
