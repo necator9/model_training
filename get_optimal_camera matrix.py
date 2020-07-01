@@ -7,6 +7,15 @@ import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+def calc_sens_dim(f_px, fmm, img_res):
+    def calc(fmm, res, fpx):
+        return fmm * res / fpx
+
+    fxpx, fypx = f_px
+    return calc(fmm, img_res[0], fxpx), calc(fmm, img_res[1], fypx)
+
+
 cam_param = {'rpi': {'mtx': np.array([[602.17434328, 0., 511.32476428],   # Optical center was corrected manually
                                       [0., 601.27444228, 334.8572872],
                                       [0., 0., 1.]]),
@@ -33,8 +42,14 @@ h, w = image.shape[: 2]
 newcameramtx, roi = cv2.getOptimalNewCameraMatrix(intrinsic, dist, (w, h), 0.5, (w, h))
 dst = cv2.undistort(image, intrinsic, dist, None, newcameramtx)
 
-plt.imshow(dst, cmap='gray', vmin=0, vmax=255)
-plt.show()
+# plt.imshow(dst, cmap='gray', vmin=0, vmax=255)
+# plt.show()
 
 cv2.imwrite('scene_images/lamp_pole_opt_mtx_2.png', dst)
 print(newcameramtx)
+
+fx_px, fy_px = newcameramtx[0][0], newcameramtx[1][1]
+fl_mm = 2.2
+img_res = camera['base_res']
+sens_dim = calc_sens_dim((fx_px, fy_px), fl_mm, img_res)
+print(sens_dim)

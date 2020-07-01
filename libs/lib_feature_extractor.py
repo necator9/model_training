@@ -9,7 +9,7 @@ from libs import lib_transform_3d as t3d
 
 
 class FeatureExtractor(object):
-    def __init__(self, r_x, cam_h, img_res, sens_dim, f_l):
+    def __init__(self, r_x, cam_h, img_res, sens_dim, f_l, cxcy):
         """
         Extract object features from given bounding rectangles and contour areas
         :param r_x: # Camera rotation angle about x axis in radians
@@ -22,11 +22,12 @@ class FeatureExtractor(object):
         self.cam_h = np.asarray(cam_h, dtype=np.float32)
         self.img_res = np.asarray(img_res, dtype=np.int16)
         self.sens_dim = np.asarray(sens_dim, dtype=np.float32)
+        self.cxcy = np.asarray(cxcy, dtype=np.float32)
         self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
         self.f_l = np.asarray(f_l, dtype=np.float32)
 
         # Transformation matrices for 3D reconstruction
-        intrinsic_mtx = t3d.IntrinsicMtx((self.img_res, self.f_l, self.sens_dim), None, None).mtx
+        intrinsic_mtx = t3d.IntrinsicMtx((self.img_res, self.f_l, self.sens_dim, self.cxcy), None, None).mtx
         self.rev_intrinsic_mtx = np.linalg.inv(intrinsic_mtx[:, :-1])  # Last column is not needed in reverse transf.
         rot_x_mtx = t3d.RotationMtx('rx', None).build(self.r_x)
         self.rev_rot_x_mtx = np.linalg.inv(rot_x_mtx)
@@ -36,7 +37,7 @@ class FeatureExtractor(object):
         # Important! Reverse the y coordinates of bound.rect. along y axis before transformations (self.img_res[1] - y)
         px_y_bottom_top = self.img_res[1] - np.stack((b_rect[:, 1] + b_rect[:, 3], b_rect[:, 1]), axis=1)
         # Distances from vertices to img center (horizon) along y axis, in px
-        y_bottom_top_to_hor = self.img_res[1] / 2. - px_y_bottom_top
+        y_bottom_top_to_hor = self.cxcy[1] - px_y_bottom_top
         np.multiply(y_bottom_top_to_hor, self.px_h_mm, out=y_bottom_top_to_hor)  # Convert to mm
         # Find angle between object pixel and central image pixel along y axis
         np.arctan(np.divide(y_bottom_top_to_hor, self.f_l, out=y_bottom_top_to_hor), out=y_bottom_top_to_hor)

@@ -44,8 +44,8 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                           'ry_init': st_flip},
-            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.85, 1.85, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
-                             'ry_init': 0}}
+            'test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.8, 1.8, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
+                             'ry_init': st_flip}}
 
 
 # Parameters of scene to be generated.
@@ -62,28 +62,29 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
 # key 'thr_range': size of a kernel for morphological dilate on the resulting mask to imitate real images motion blur
 scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_range': (-2, -7, -0.2),
                            'z_range': (1, 30, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                           'thr_range': (1, 26, 12)},
+                           'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               '_test_1': {'cam_angle': (-22, -23, -1), 'x_range': (-2, -1, 1), 'y_range': (-3.2, -3.3, -0.1),
                           'z_range': (13, 14, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                          'thr_range': (1, 2, 1)},
-              'test_2': {'cam_angle': (-36, -37, -1), 'x_range': (0, 1, 1), 'y_range': (-3.2, -3.3, -0.1),
-                         'z_range': (11, 12, 1), 'img_res': (1024, 768), 'f_l': 2.2, 'sens_dim': (3.66, 2.76),
-                         'thr_range': (1, 2, 1)},
+                          'thr_range': (1, 2, 1), 'cxcy': (640, 360)},
+              'test_rpi': {'cam_angle': (-39, -40, -1), 'x_range': (0, 1, 1), 'y_range': (-3.325, -3.4, -0.2),
+                         'z_range': (8, 9, 1), 'img_res': (1024, 768), 'f_l': 2.2, 'sens_dim': (4.8502388678445065,
+                                                                                                3.6501095778269583),
+                         'thr_range': (1, 2, 1), 'cxcy': (517.5116402, 365.84214009)},
               '_for_plot': {'cam_angle': (-22, -23, -1), 'x_range': (-8, 10, 2), 'y_range': (-3.1, -3.2, -0.1),
                             'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                            'thr_range': (1, 26, 12)},
+                            'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               '_rw_scenes': {'cam_angle': (-10, -33, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -5.5, -0.5),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                             'thr_range': (1, 26, 12)},
+                             'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               '_all_scenes': {'cam_angle': (-0, -95, -5), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.5, -0.5),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                             'thr_range': (1, 26, 12)},
+                             'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               'all_scenes_detailed': {'cam_angle': (-0, -92, -2), 'x_range': (-8, 10, 2), 'y_range': (-3, -10.2, -0.2),
                              'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                             'thr_range': (1, 26, 12)},
+                             'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               '_sel_sc': {'cam_angle': (-13, -16, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -3.5, -0.5),
                           'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                          'thr_range': (1, 26, 12)}}
+                          'thr_range': (1, 26, 12)}, 'cxcy': (640, 360)}
 
 # Mapping the most important columns' names in csv file
 cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.

@@ -117,8 +117,9 @@ def generate_features(o_key, sc_key, save_q, stop_event):
     sens_dim = sc['sens_dim']
     f_l = sc['f_l']
     o_class = work_obj['o_class']
+    cx_cy = sc['cxcy']
 
-    intrinsic = (np.asarray(img_res), f_l, np.asarray(sens_dim))
+    intrinsic = (np.asarray(img_res), f_l, np.asarray(sens_dim), cx_cy)
     vertices, faces = parse_3d_obj_file(os.path.join(sp.obj_dir_path, o_key))
     rw_system = t3d.Handler3D(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
 
@@ -140,7 +141,7 @@ def generate_features(o_key, sc_key, save_q, stop_event):
             c_ar, b_rect = np.expand_dims(c_ar[max_idx], axis=0), np.expand_dims(b_rect[max_idx], axis=0)
             # Update instance of feature extractor only when influencing parameters are changed
             if prev_rx != cam_a or prev_y != y:
-                pc = fe.FeatureExtractor(cam_a, y, img_res, sens_dim, f_l)
+                pc = fe.FeatureExtractor(cam_a, y, img_res, sens_dim, f_l, cx_cy)
                 prev_rx, prev_y = cam_a, y
             # Extract features from contours and bounding rectangles
             z_est, x_est, width_est, height_est, rw_ca_est = pc.extract_features(c_ar, b_rect)
