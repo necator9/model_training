@@ -107,10 +107,7 @@ def generate_features(o_key, sc_key, save_q, stop_event):
     # Generate iterator from parameters in config
     work_obj = sp.obj_info[o_key]
     sc = sp.scene_info[sc_key]
-    try:
-        it, total_iter = init_iterator(sc, work_obj)
-    except Exception:
-        print(o_key, sc_key, sc)
+    it, total_iter = init_iterator(sc, work_obj)
     logger.info("Total iterations: {}".format(total_iter))
 
     is_prop = work_obj['dim']['prop']

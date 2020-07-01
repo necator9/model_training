@@ -84,7 +84,7 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
                              'thr_range': (1, 26, 12), 'cxcy': (640, 360)},
               '_sel_sc': {'cam_angle': (-13, -16, -3), 'x_range': (-8, 10, 2), 'y_range': (-3, -3.5, -0.5),
                           'z_range': (1, 31, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
-                          'thr_range': (1, 26, 12)}, 'cxcy': (640, 360)}
+                          'thr_range': (1, 26, 12), 'cxcy': (640, 360)}}
 
 # Mapping the most important columns' names in csv file
 cam_a_k = 'cam_a'         # Camera angle relative to the ground surface in range [0, -90] deg.
