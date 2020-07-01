@@ -110,7 +110,7 @@ def generate_features(o_key, sc_key, save_q, stop_event):
     try:
         it, total_iter = init_iterator(sc, work_obj)
     except Exception:
-        print(o_key, sc_key, sc['cam_angle'])
+        print(o_key, sc_key, sc)
     logger.info("Total iterations: {}".format(total_iter))
 
     is_prop = work_obj['dim']['prop']
