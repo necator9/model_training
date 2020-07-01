@@ -10,7 +10,7 @@ import logging
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
 
 import train_model as tm
-import lib_transform_data as tdata
+from libs import lib_transform_data as tdata
 import config as cf
 
 # Set up logging,

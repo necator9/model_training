@@ -5,7 +5,7 @@
 
 import numpy as np
 
-import lib_transform_3d as t3d
+from libs import lib_transform_3d as t3d
 
 
 class FeatureExtractor(object):

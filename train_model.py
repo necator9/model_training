@@ -6,7 +6,6 @@
 # Train a logistic regression classifier based on previously generated data (target objects + noises)
 
 import sys
-import pickle
 import logging
 import pandas as pd
 import numpy as np
@@ -14,8 +13,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 
 import config as cf
-import lib_transform_data as tdata
-
+from libs import lib_transform_data as tdata
 
 # Set up logging,
 logger = logging.getLogger(__name__)
