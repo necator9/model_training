@@ -82,8 +82,10 @@ def init_iterator(sc, work_obj):
     dim_mask = build_dims_mask(work_obj['dim']['val'])
     dim_ranges = gen_dims_ranges(dim_mask)
     rotate_y_rg = np.linspace(*work_obj['rotate_y'])
-
-    cam_angles = np.arange(*sc['cam_angle'])
+    try:
+        cam_angles = np.arange(*sc['cam_angle'])
+    except TypeError:
+        print(*sc['cam_angle'], sc, work_obj)
     x_range = np.arange(*sc['x_range'])
     y_range = np.arange(*sc['y_range'])
     z_range = np.arange(*sc['z_range'])
