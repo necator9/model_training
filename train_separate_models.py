@@ -100,4 +100,4 @@ if __name__ == '__main__':
 
     result_dict = build_dictionary(result)
     # Dump dictionary with multiple training cases
-    tdata.dump_object(sys.argv[3] + 'separate_clf_dict.pcl', result_dict)
+    tdata.dump_object(sys.argv[3], result_dict)

@@ -87,7 +87,7 @@ def gen_w_h(hulls_, points_amount_, w_rg_, h_rg_):
                 return np.array(noises)
 
 
-POINTS_AMOUNT = 5000
+POINTS_AMOUNT = 15000
 
 csv_file = sys.argv[1]  # Path to targeted csv file passed as cl argument
 image_res = cfg.processing_scene['img_res']
