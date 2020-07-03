@@ -82,7 +82,8 @@ def build_dictionary(it_params):
 
 
 if __name__ == '__main__':
-    dt = tm.read_dataframe(sys.argv[1], sys.argv[2])
+    image_res = cf.processing_scene['img_res']
+    dt = tm.read_dataframe(sys.argv[1], sys.argv[2], image_res)
 
     angles = dt[cf.cam_a_k].unique()
     heights = dt[cf.cam_y_k].unique()

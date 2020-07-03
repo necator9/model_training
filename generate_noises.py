@@ -90,7 +90,8 @@ def gen_w_h(hulls_, points_amount_, w_rg_, h_rg_):
 POINTS_AMOUNT = 5000
 
 csv_file = sys.argv[1]  # Path to targeted csv file passed as cl argument
-obj_features = tdata.clean_by_margin(pd.read_csv(csv_file))  # Read generated features
+image_res = cfg.processing_scene['img_res']
+obj_features = tdata.clean_by_margin(pd.read_csv(csv_file), img_res=image_res)  # Read generated features
 # Find available camera angles and heights
 angle_rg = obj_features[cfg.cam_a_k].unique()
 height_rg = obj_features[cfg.cam_y_k].unique()

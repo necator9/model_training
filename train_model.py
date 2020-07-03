@@ -35,7 +35,7 @@ if len(sys.argv) != 4:
     sys.exit()
 
 
-def read_dataframe(target_df_path, noises_df_path):
+def read_dataframe(target_df_path, noises_df_path, image_res):
     """
     Read the source training data from files and filter it
     :param target_df_path: path to csv file containing objects' features
@@ -44,7 +44,7 @@ def read_dataframe(target_df_path, noises_df_path):
     """
     target_df = pd.read_csv(target_df_path)
     noises_df = pd.read_csv(noises_df_path)
-    target_df = tdata.clean_by_margin(target_df)
+    target_df = tdata.clean_by_margin(target_df, img_res=image_res)
     full_dataframe = pd.concat([noises_df, target_df])
 
     logger.info('Input data shape: {}'.format(full_dataframe.shape))
@@ -90,7 +90,8 @@ if __name__ == '__main__':
     """
     Train a single classifier for all given camera angle/height scenarios
     """
-    dt = read_dataframe(sys.argv[1], sys.argv[2])
+    image_res = cf.processing_scene['img_res']
+    dt = read_dataframe(sys.argv[1], sys.argv[2], image_res)
     # Name of columns are used for training
     feature_vector = [cf.w_k, cf.h_k, cf.ca_k, cf.z_k, cf.cam_y_k, cf.cam_a_k]
     X_train, y_train, poly = prepare_data_for_training(dt, feature_vector)
