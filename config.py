@@ -44,7 +44,7 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             '_car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                           'ry_init': st_flip},
-            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 6, 9]]}, 'rotate_y': (0, 45, 3), 'o_class': 3,
+            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 3, 9]]}, 'rotate_y': (0, 45, 3), 'o_class': 3,
                           'ry_init': st_flip},
             '_test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.8, 1.8, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
                              'ry_init': st_flip},
