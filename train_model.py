@@ -79,8 +79,7 @@ def train_cassifier(x_tr, y_tr):
     :return: instance of the trained model
     """
     # Init classifier
-    log_reg = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1,
-                                 class_weight='balanced')
+    log_reg = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1)
     logger.info('Starting the classifier training')
     log_reg.fit(x_tr, y_tr)
 
