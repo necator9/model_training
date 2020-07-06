@@ -54,7 +54,7 @@ def train_single_clf(height, angle, filtered_df):
     :return: height, angle to be used as keys, classifier and polynomial transformer
     """
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
-    feature_vector = [cf.w_k, cf.h_k, cf.ca_k, cf.z_k]  # Name of columns are used for training
+    feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
     clf = tm.train_cassifier(x_train, y_train)
     logger.info('Trained for height: {}, angle: {}, date shape: {}'.format(height, angle, x_train.shape))
