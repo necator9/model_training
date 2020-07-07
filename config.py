@@ -13,7 +13,7 @@
 # The keys starting with "_" are ignored in both scenarios. Used to keep possibly useful parameters that
 # were used previously.
 
-loglevel = 20
+loglevel = 10
 obj_dir_path = 'obj/'  # Directory containing preliminary prepared objects in wavefront.obj format
 
 st_ry = (0, 90, 5)  # Standard range of object rotation angles about y axis (movement direction imitation)
@@ -44,14 +44,18 @@ obj_info = {'walking-man.obj': {'dim': {'prop': True, 'val': [[1, 1.4, 1.95, 10]
                             'ry_init': st_flip},
             '_car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 2, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                           'ry_init': st_flip},
-            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 3, 9]]}, 'rotate_y': (0, 45, 3), 'o_class': 3,
+            'car-3.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 3, 9]]}, 'rotate_y': st_ry, 'o_class': 3,
                           'ry_init': st_flip},
-            'car-2.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 3, 9]]}, 'rotate_y': (0, 0, 1), 'o_class': 3,
+            '_car-2.obj': {'dim': {'prop': True, 'val': [[1, 1.5, 3, 9]]}, 'rotate_y': (0, 0, 1), 'o_class': 3,
                           'ry_init': st_flip},
             '_test-obj.obj': {'dim': {'prop': True, 'val': [[1, 1.8, 1.8, 1]]}, 'rotate_y': (0, 0, 1), 'o_class': 1,
                              'ry_init': st_flip},
-            'test-obj-2.obj': {'dim': {'prop': True, 'val': [[1, 1.71, 1.71, 1]]}, 'rotate_y': (90, 90, 1), 'o_class': 1,
-                              'ry_init': st_flip}}
+            '_test-obj-2.obj': {'dim': {'prop': True, 'val': [[1, 1.71, 1.71, 1]]}, 'rotate_y': (90, 90, 1), 'o_class': 1,
+                              'ry_init': st_flip},
+            'test-obj-3.obj': {'dim': {'prop': True, 'val': [[1, 3, 3, 1]]}, 'rotate_y': (45, 45, 1),
+                               'o_class': 1,
+                               'ry_init': st_flip}}
+
 
 
 
@@ -73,8 +77,8 @@ scene_info = {'_scene_a': {'cam_angle': (0, -70, -3), 'x_range': (-8, 8, 2), 'y_
               '_test_1': {'cam_angle': (-22, -23, -1), 'x_range': (-2, -1, 1), 'y_range': (-3.2, -3.3, -0.1),
                           'z_range': (13, 14, 1), 'img_res': (1280, 720), 'f_l': 3.6, 'sens_dim': (3.4509, 1.9373),
                           'thr_range': (1, 2, 1), 'cxcy': (640, 360)},
-              'test_2': {'cam_angle': (-39, -40, -1), 'x_range': (7, 8, 2), 'y_range': (-3.325, -3.4, -0.2),
-                         'z_range': (5, 6, 1), 'img_res': (1024, 768), 'f_l': 2.2, 'sens_dim': (4.8502388678445065,
+              'test_2': {'cam_angle': (-39, -40, -1), 'x_range': (0, 1, 2), 'y_range': (-3.325, -3.4, -0.2),
+                         'z_range': (3.4, 3.5, 0.2), 'img_res': (1024, 768), 'f_l': 2.2, 'sens_dim': (4.8502388678445065,
                                                                                                 3.6501095778269583),
                          'thr_range': (1, 2, 1), 'cxcy': (517.5116402, 365.84214009)},
 
