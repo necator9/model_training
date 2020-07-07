@@ -13,7 +13,7 @@
 # The keys starting with "_" are ignored in both scenarios. Used to keep possibly useful parameters that
 # were used previously.
 
-loglevel = 10
+loglevel = 20
 obj_dir_path = 'obj/'  # Directory containing preliminary prepared objects in wavefront.obj format
 
 st_ry = (0, 90, 5)  # Standard range of object rotation angles about y axis (movement direction imitation)
