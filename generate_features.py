@@ -1,11 +1,17 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
+
+# Created by Ivan Matveev at 01.03.20
+# E-mail: ivan.matveev@hs-anhalt.de
+
+# Method for synthetic features generation using 3D models and projective transformation
 
 import os
-import sys
 import multiprocessing
 import queue
 import signal
 import logging
+import yaml
+import argparse
 
 import numpy as np
 import itertools
@@ -28,20 +34,56 @@ logger.addHandler(ch)
 logger.addHandler(file_handler)
 
 
-def build_dims_mask(in_dim):
+# Ignore keyboard interrupt in forks, let parent process to handle this gently
+def init_child_process():
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
+
+
+# Build an iterator based on given parameters
+def init_iterator(conf, o_key):
+    cam = conf['camera']
+    obj = conf['obj'][o_key]
+    obj_global = conf['obj_global']
+
+    dim_ranges = init_scale_ranges([[1, *obj['scale']['range'], obj['scale']['n_points']]])
+    rotate_y_rg = np.linspace(*obj['rotate_y']['range'], obj['rotate_y']['n_points'])
+    cam_angles = np.linspace(*cam['angle']['range'], cam['angle']['n_points'])
+    x_range = np.linspace(*obj_global['x_range']['range'], obj_global['x_range']['n_points'])
+    y_range = np.linspace(*obj_global['y_range']['range'], obj_global['y_range']['n_points'])
+    z_range = np.linspace(*obj_global['z_range']['range'], obj_global['z_range']['n_points'])
+    thr_range = np.linspace(*obj_global['thr']['range'], obj_global['thr']['n_points'])
+
+    it = itertools.product(cam_angles, dim_ranges[0], dim_ranges[1], dim_ranges[2], rotate_y_rg, x_range, y_range,
+                           z_range, thr_range)
+
+    total_iter = np.prod([rg.size for rg in (cam_angles, dim_ranges[0], dim_ranges[1], dim_ranges[2], rotate_y_rg,
+                                             x_range, y_range, z_range, thr_range)])
+
+    return it, total_iter
+
+
+def init_scale_ranges(scale_range):
     """
-    Fill by zeros not used dimensions
-    :param in_dim:
-    :return:
+    Generate range of values to which object is scaled
+    :param scale_range: interval's border values
+    :return: scale range for 3 dimensions
     """
-    in_dim = np.asarray(in_dim)
-    dim_mask = np.zeros((3, 3))
-    dim_mask[in_dim[:, 0].astype(int), :] = in_dim[:, 1:]
+    def build_dims_mask(in_dim):
+        """
+        Fill by zeros not used dimensions
+        """
+        in_dim = np.asarray(in_dim)
+        mask = np.zeros((3, 3))
+        mask[in_dim[:, 0].astype(int), :] = in_dim[:, 1:]
 
-    return dim_mask
+        return mask
 
+    # Pass scale_range as [[dimension - id, lower - border, higher - border, amount - of - points - between]],
+    # where dimension-id lies in range [0, 1, 2] that correspond to [X, Y, Z] (object width, height, depth)
+    # To generate a mask for non-uniform scaling pass multiple lists, e.g. [[1, 1.4, 1.95, 10], [2, 0.4, 1.2, 3]] and
+    # set not proportional argument while scaling
+    dim_mask = build_dims_mask(scale_range)
 
-def gen_dims_ranges(dim_mask):
     ranges_lst = [np.linspace(row[0], row[1], row[2].astype(int)) for row in dim_mask]
     ranges_lst = [np.zeros(1) if rg.size == 0 else rg for rg in ranges_lst]
 
@@ -72,112 +114,92 @@ def parse_3d_obj_file(path):
     return vertices, faces
 
 
-# Ignore keyboard interrupt in forks, let parent process to handle this gently
-def init_child_process():
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-
-# Build an iterator object based on given parameters
-def init_iterator(sc, work_obj):
-    dim_mask = build_dims_mask(work_obj['dim']['val'])
-    dim_ranges = gen_dims_ranges(dim_mask)
-    rotate_y_rg = np.linspace(*work_obj['rotate_y'])
-    cam_angles = np.arange(*sc['cam_angle'])
-    x_range = np.arange(*sc['x_range'])
-    y_range = np.arange(*sc['y_range'])
-    z_range = np.arange(*sc['z_range'])
-    thr_range = np.arange(*sc['thr_range'])
-
-    it = itertools.product(cam_angles, dim_ranges[0], dim_ranges[1], dim_ranges[2], rotate_y_rg, x_range, y_range,
-                           z_range, thr_range)
-
-    total_iter = np.prod([rg.size for rg in (cam_angles, dim_ranges[0], dim_ranges[1], dim_ranges[2], rotate_y_rg,
-                                             x_range, y_range, z_range, thr_range)])
-
-    return it, total_iter
-
-
 def get_status(i, total_iter):
     return '{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter)
 
 
-# Worker function
-def generate_features(o_key, sc_key, save_q, stop_event):
+def generate_features(o_key, conf, save_q, stop_event):
+    """
+    Main routine to generate features
+    :param o_key: object to process by current worker
+    :param conf: parsed config
+    :param save_q: q where generated features are pushed
+    :param stop_event: stop event
+    """
     multiprocessing.current_process().name = o_key  # Set process name
-    # Generate iterator from parameters in config
-    work_obj = sp.obj_info[o_key]
-    sc = sp.scene_info[sc_key]
-    it, total_iter = init_iterator(sc, work_obj)
+    it, total_iter = init_iterator(conf, o_key)  # Generate iterator from parameters in config
     logger.info("Total iterations: {}".format(total_iter))
 
-    is_prop = work_obj['dim']['prop']
+    work_obj = conf['obj'][o_key]
     ry_init = work_obj['ry_init']
-    img_res = sc['img_res']
-    sens_dim = sc['sens_dim']
-    f_l = sc['f_l']
-    o_class = work_obj['o_class']
-    cx_cy = sc['cxcy']
+    o_class = work_obj['class']
 
-    intrinsic = (np.asarray(img_res), f_l, np.asarray(sens_dim), cx_cy)
-    vertices, faces = parse_3d_obj_file(os.path.join(sp.obj_dir_path, o_key))
-    rw_system = t3d.Handler3D(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic)
+    camera_params = yaml.safe_load(open(conf['camera']['params']))
+    img_res = camera_params['optimized_res']
+    f_l = camera_params['focal_length']
+    intrinsic_raw = np.asarray(camera_params['optimized_matrix'])
+    intrinsic = np.hstack((intrinsic_raw, np.zeros((3, 1))))
+    intrinsic_args = (intrinsic, img_res)
+
+    vertices, faces = parse_3d_obj_file(work_obj['file'])
+    rw_system = t3d.Handler3D(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic_args)
 
     data_to_save = list()
-    entries_counter = 0
     prev_rx, prev_y = None, None
     i = 0
-    for cam_a, ww, hh, dd, ry, x, y, z, thr in it:
-        rw_system.transform((is_prop, np.asarray([ww, hh, dd])), np.deg2rad(ry_init + ry), np.asarray([x, y, z]),
+    entries_counter = 0
+
+    for i, (cam_a, ww, hh, dd, ry, x, y, z, thr) in enumerate(it):
+        rw_system.transform((True, np.asarray([ww, hh, dd])), np.deg2rad(ry_init + ry), np.asarray([x, y, z]),
                             np.deg2rad(cam_a))  # Transform object in 3D space and project to image plane
 
         mask = t2d.generate_image_plane(rw_system.img_points, faces, thr, img_res)
+        basic_params = t2d.find_basic_params(mask)  # Extract basic parameters (ca, x, y, w, h) from the image
+        if basic_params.size == 0:
+            continue
+        basic_params = t2d.calc_second_point(basic_params)  # Calculate opposite rectangle point and add it to array
+        # Select row with maximal contour area and add dimension
+        basic_params = basic_params[np.argmax(basic_params[:, 0])].reshape(1, basic_params.shape[1])
 
-        c_ar, b_rect = t2d.find_basic_params(mask)
+        # Update instance of feature extractor only when influencing parameters are changed
+        if prev_rx != cam_a or prev_y != y:
+            pc = fe.FeatureExtractor(cam_a, y, img_res, intrinsic_raw, f_l)
+            prev_rx, prev_y = cam_a, y
 
-        if any(c_ar):
-            # From multiple contours select one with maximal contour area
-            max_idx = np.argmax(c_ar)
-            c_ar, b_rect = np.expand_dims(c_ar[max_idx], axis=0), np.expand_dims(b_rect[max_idx], axis=0)
-            # Update instance of feature extractor only when influencing parameters are changed
-            if prev_rx != cam_a or prev_y != y:
-                pc = fe.FeatureExtractor(cam_a, y, img_res, sens_dim, f_l, cx_cy)
-                prev_rx, prev_y = cam_a, y
-            # Extract features from contours and bounding rectangles
-            z_est, x_est, width_est, height_est, rw_ca_est = pc.extract_features(c_ar, b_rect)
+        # Extract features from contours and bounding rectangles
+        z_est, x_est, width_est, height_est, rw_ca_est = pc.extract_features(basic_params)
 
-            # Get actual object shape from feature extractor instance
-            shape_mtx = [mtx for mtx in rw_system.mtx_seq if isinstance(mtx, t3d.ScaleMtx)]
-            ww, hh, dd, = shape_mtx[0].shape_cursor
-            x_px, y_px, w_px, h_px = b_rect[0]
-            # Form entry of generated parameters to save
-            data_to_save.append([cam_a, y, z_est[0], z, x_est[0], x, width_est[0], ww, height_est[0], hh, rw_ca_est[0],
-                                 o_key, o_class, ry, x_px, y_px, w_px, h_px, c_ar[0], thr, dd])
-            entries_counter += 1
+        # Get actual object shape from feature extractor instance
+        shape_mtx = [mtx for mtx in rw_system.mtx_seq if isinstance(mtx, t3d.ScaleMtx)]
+        ww, hh, dd, = shape_mtx[0].shape_cursor
+        x_px, y_px, w_px, h_px = basic_params[0, 1:5].tolist()
+        # Form entry of generated parameters to save
+        data_to_save.append([cam_a, y, z_est[0], z, x_est[0], x, width_est[0], ww, height_est[0], hh, rw_ca_est[0],
+                             o_key, o_class, ry, x_px, y_px, w_px, h_px, basic_params[0, 0], thr, dd])
 
-            if entries_counter % 10000 == 0:
-                save_q.put(data_to_save)
-                data_to_save = list()
-                logger.info(get_status(i, total_iter))
+        entries_counter += 1
+        if entries_counter % 10000 == 0:
+            save_q.put(data_to_save)
+            data_to_save = list()
+            logger.info(get_status(i + 1, total_iter))
 
         if stop_event.is_set():
             break
 
-        if logger.getEffectiveLevel() == logging.DEBUG:
+        if args.show:
             t2d.plt_2d_projections(rw_system.transformed_vertices)
             t2d.plot_image_plane(mask, img_res)
-
-        i += 1
 
     if len(data_to_save) > 0:
         save_q.put(data_to_save)
 
-    logger.info('Finished {}'.format(get_status(i, total_iter)))
+    logger.info('Finished {}'.format(get_status(i + 1, total_iter)))
 
 
 def saver_thr(out_f, q, stop_event):
     init_child_process()
-    global header
     i = int()
+    header = True
     while True:
         try:
             data_to_save = q.get(timeout=1)
@@ -199,27 +221,26 @@ def del_if_exists(out_f):
         logger.info(' Output file: {}'.format(out_f))
 
 
-header = True
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Generate features of 3D objects')
+    parser.add_argument('config', action='store', help="path to the configuration file")
+    parser.add_argument('--csv', action='store', help="path to the output csv file (default:features.csv )",
+                        default='features.csv')
+    parser.add_argument('--show', action='store_true', help="show the generated images")
+    args = parser.parse_args()
+    config = yaml.safe_load(open(args.config))
+
     m = multiprocessing.Manager()
     stop_event_gen = m.Event()
     stop_event_saver = m.Event()
     data_save_q = m.Queue()
 
-    out_file = sys.argv[1] if len(sys.argv) == 2 else 'default_filename.csv'
-    del_if_exists(out_file)
-    saver = multiprocessing.Process(target=saver_thr, args=(out_file, data_save_q, stop_event_saver), name='saver')
-    o_keys = sp.obj_info.keys()
-    scene_key = sp.scene_info.keys()
+    del_if_exists(args.csv)
+    saver = multiprocessing.Process(target=saver_thr, args=(args.csv, data_save_q, stop_event_saver), name='saver')
 
-    if logger.getEffectiveLevel() == logging.DEBUG:
-        o_keys = [key for key in o_keys if not key.startswith('_') and key.startswith('test')]
-        scene_key = [key for key in scene_key if not key.startswith('_') and key.startswith('test')]
-    else:
-        o_keys = [key for key in o_keys if not key.startswith('_') and not key.startswith('test')]
-        scene_key = [key for key in scene_key if not key.startswith('_') and not key.startswith('test')]
+    o_keys = config['obj'].keys()
 
-    iterable_args = itertools.product(o_keys, scene_key, [data_save_q], [stop_event_gen])
+    iterable_args = itertools.product(o_keys, [config], [data_save_q], [stop_event_gen])
     pool = multiprocessing.Pool(processes=len(o_keys), initializer=init_child_process)
 
     try:

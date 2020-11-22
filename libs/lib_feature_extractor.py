@@ -9,38 +9,37 @@ from libs import lib_transform_3d as t3d
 
 
 class FeatureExtractor(object):
-    def __init__(self, r_x, cam_h, img_res, sens_dim, f_l, cxcy):
-        """
-        Extract object features from given bounding rectangles and contour areas
-        :param r_x: # Camera rotation angle about x axis in radians
-        :param cam_h: # Ground y coord relative to camera (cam. is origin) in meters
-        :param img_res: # Image resolution (width, height) in px
-        :param sens_dim: # Camera sensor dimensions (width, height) in mm
-        :param f_l: # Focal length in mm
-        """
-        self.r_x = np.deg2rad(r_x, dtype=np.float32)
-        self.cam_h = np.asarray(cam_h, dtype=np.float32)
-        self.img_res = np.asarray(img_res, dtype=np.int16)
-        self.sens_dim = np.asarray(sens_dim, dtype=np.float32)
-        self.cxcy = np.asarray(cxcy, dtype=np.float32)
-        self.px_h_mm = self.sens_dim[1] / self.img_res[1]  # Height of a pixel in mm
-        self.f_l = np.asarray(f_l, dtype=np.float32)
+    """
+    Extract object features from given bounding rectangles and contour areas
+    :param r_x: # Camera rotation angle about x axis in radians
+    :param cam_h: # Ground y coord relative to camera (cam. is origin) in meters
+    :param img_res: # Image resolution (width, height) in px
+    :param f_l: # Focal length in mm
+    """
+    def __init__(self, r_x, cam_h, img_res, intrinsic, f_l):
+        self.r_x = np.deg2rad(r_x, dtype=np.float32)  # Camera rotation angle about x axis in radians
+        self.cam_h = np.asarray(cam_h, dtype=np.float32)  # Ground y coord relative to camera (cam. is origin) in meters
+        self.img_res = np.asarray(img_res, dtype=np.int16)  # Image resolution (width, height) in px
+        self.f_l = f_l  # Focal length in mm
+        # Camera sensor dimensions (width, height) in mm
+        self.sens_dim = self.f_l * self.img_res / intrinsic.diagonal()[:2]
+        self.px_h_mm = self.sens_dim[1] / (self.f_l * self.img_res[1])  # Scaling between pixels in millimeters
+        self.cx_cy = intrinsic[:2, 2]
 
         # Transformation matrices for 3D reconstruction
-        intrinsic_mtx = t3d.IntrinsicMtx((self.img_res, self.f_l, self.sens_dim, self.cxcy), None, None).mtx
-        self.rev_intrinsic_mtx = np.linalg.inv(intrinsic_mtx[:, :-1])  # Last column is not needed in reverse transf.
+        self.rev_intrinsic_mtx = np.linalg.inv(intrinsic)
         rot_x_mtx = t3d.RotationMtx('rx', None).build(self.r_x)
         self.rev_rot_x_mtx = np.linalg.inv(rot_x_mtx)
 
-    def extract_features(self, ca_px, b_rect):
+    def extract_features(self, basic_params):  # [[c_ar, x, y, w, h, p2x, p2y]]
+        ca_px, b_rect = basic_params[:, 0], basic_params[:, 1:]
         # * Transform bounding rectangles to required shape
         # Important! Reverse the y coordinates of bound.rect. along y axis before transformations (self.img_res[1] - y)
-        px_y_bottom_top = self.img_res[1] - np.stack((b_rect[:, 1] + b_rect[:, 3], b_rect[:, 1]), axis=1)
+        px_y_bottom_top = self.img_res[1] - b_rect[:, [5, 1]]
         # Distances from vertices to img center (horizon) along y axis, in px
-        y_bottom_top_to_hor = self.cxcy[1] - px_y_bottom_top
-        np.multiply(y_bottom_top_to_hor, self.px_h_mm, out=y_bottom_top_to_hor)  # Convert to mm
-        # Find angle between object pixel and central image pixel along y axis
-        np.arctan(np.divide(y_bottom_top_to_hor, self.f_l, out=y_bottom_top_to_hor), out=y_bottom_top_to_hor)
+        y_bottom_top_to_hor = self.cx_cy[1] - px_y_bottom_top
+        # Convert to mm and find angle between object pixel and central image pixel along y axis
+        np.arctan(np.multiply(y_bottom_top_to_hor, self.px_h_mm, out=y_bottom_top_to_hor), out=y_bottom_top_to_hor)
 
         # * Find object distance in real world
         rw_distance = self.estimate_distance(y_bottom_top_to_hor[:, 0])  # Passed arg is angles to bottom vertices
@@ -49,7 +48,7 @@ class FeatureExtractor(object):
 
         # * Transform bounding rectangles to required shape
         # Build a single array from left and right rects' coords to compute within single vectorized transformation
-        px_x_l_r = np.hstack((b_rect[:, 0], b_rect[:, 0] + b_rect[:, 2]))  # Left and right bottom coords
+        px_x_l_r = np.hstack((b_rect[:, 0], b_rect[:, 4]))  # Left and right bottom coords
         # so the [:shape/2] belongs to left and [shape/2:] to the right bound. rect. coordinates
         x_lr_yb_hom = np.stack((px_x_l_r,
                                 np.tile(px_y_bottom_top[:, 0], 2),
@@ -70,7 +69,7 @@ class FeatureExtractor(object):
     # Estimate distance to the bottom pixel of a bounding rectangle. Based on assumption that object is aligned with the
     # ground surface. Calculation uses angle between vertex and optical center along vertical axis
     def estimate_distance(self, ang_y_bot_to_hor):
-        deg = abs(self.r_x) + ang_y_bot_to_hor
+        deg = ang_y_bot_to_hor - self.r_x
         distance = abs(self.cam_h) / np.where(deg >= 0, np.tan(deg), np.inf)
 
         return distance

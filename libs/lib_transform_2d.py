@@ -53,7 +53,14 @@ def generate_image_plane(img_points, faces, k_size, img_res):
 
 def find_basic_params(mask):
     cnts, _ = cv2.findContours(mask, mode=0, method=1)
-    c_areas = [cv2.contourArea(cnt) for cnt in cnts]
-    b_rects = [cv2.boundingRect(b_r) for b_r in cnts]
+    c_areas = np.asarray([cv2.contourArea(cnt) for cnt in cnts])
+    b_rects = np.asarray([cv2.boundingRect(b_r) for b_r in cnts])
 
-    return np.asarray(c_areas), np.asarray(b_rects)
+    return np.column_stack((c_areas, b_rects))
+
+
+def calc_second_point(temp_param):
+    p2_x = temp_param[:, 1] + temp_param[:, 3]
+    p2_y = temp_param[:, 2] + temp_param[:, 4]
+
+    return np.column_stack((temp_param, p2_x, p2_y)).astype(np.float32)

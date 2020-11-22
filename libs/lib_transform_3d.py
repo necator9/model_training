@@ -46,6 +46,7 @@ class ScaleMtx(object):
     def build(self, args):
         self.shape = self.measure_act_shape()
         prop, req_dims = args
+
         scale_f = np.asarray(req_dims) / self.shape
         if prop:
             scale_f[:] = scale_f.max()
@@ -63,11 +64,7 @@ class ScaleMtx(object):
 
 class IntrinsicMtx(object):
     def __init__(self, args, vertices, img_points):
-        self.img_res, self.f_l, self.sens_dim, self.cxcy = args
-        self.mtx = np.eye(3, 4)
-        np.fill_diagonal(self.mtx, self.f_l * self.img_res / self.sens_dim)
-        # self.mtx[:, 2] = np.append(self.img_res / 2, 1)  # Append 1 to replace old value in mtx after fill_diagonal
-        self.mtx[:, 2] = (*self.cxcy, 1)
+        self.mtx, self.img_res = args
 
         self.img_points = img_points
         self.vertices = vertices
