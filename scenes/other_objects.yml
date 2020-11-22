@@ -1,0 +1,33 @@
+obj:
+  pair-1:
+    file: 'obj/pair-1.obj'
+    scale:
+      range: [ 1.65, 2.1 ]
+      n_points: 9
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 1
+
+  pair-2:
+      file: 'obj/pair-2.obj'
+      scale:
+        range: [ 1.65, 2.1 ]
+        n_points: 9
+      rotate_y:
+        range: [ 0, 90 ]
+        n_points: 5
+      ry_init: 180
+      class: 1
+
+  car-3:
+    file: 'obj/pair-2.obj'
+    scale:
+      range: [ 1.5, 2 ]
+      n_points: 9
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 3

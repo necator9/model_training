@@ -11,7 +11,7 @@ from joblib import Parallel, delayed  # Run iterative calculations as parallel p
 
 import train_model as tm
 from libs import lib_transform_data as tdata
-import config as cf
+import map as cf
 
 # Set up logging,
 logger = logging.getLogger(__name__)

@@ -12,7 +12,7 @@ import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 
-import config as cf
+import map as cf
 from libs import lib_transform_data as tdata
 
 # Set up logging,
@@ -44,7 +44,6 @@ def read_dataframe(target_df_path, noises_df_path, image_res):
     """
     target_df = pd.read_csv(target_df_path)
     noises_df = pd.read_csv(noises_df_path)
-    target_df = tdata.clean_by_margin(target_df, img_res=image_res)
     full_dataframe = pd.concat([noises_df, target_df])
 
     logger.info('Input data shape: {}'.format(full_dataframe.shape))

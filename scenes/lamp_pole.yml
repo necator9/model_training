@@ -1,0 +1,99 @@
+# Configuration file containing parameters synthetic data generation
+
+camera:
+  params: 'camera_matrices/calibration_opt.yml'
+  angle:
+    range: [-39, -40]
+    n_points: 1
+
+obj_global:
+  thr:
+    range: [1, 26]
+    n_points: 2
+  x_range:
+    range: [-8, 8]
+    n_points: 1
+  y_range:
+    range: [ -3.325, -3.4 ]
+    n_points: 2
+  z_range:
+    range: [ 1, 15 ]
+    n_points: 2
+
+obj:
+  walking-man:
+    file: 'obj/walking-man.obj'
+    scale:
+      range: [1.4, 1.95]
+      n_points: 10
+    rotate_y:
+      range: [0, 90]
+      n_points: 5
+    ry_init: 180
+    class: 1
+
+  woman-1:
+    file: 'obj/woman-1.obj'
+    scale:
+      range: [ 1.4, 1.95 ]
+      n_points: 10
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 1
+
+  running-boy:
+    file: 'obj/running-boy.obj'
+    scale:
+      range: [ 1.4, 1.95 ]
+      n_points: 10
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 1
+
+  standing-man:
+    file: 'obj/standing-man.obj'
+    scale:
+      range: [ 1.4, 1.95 ]
+      n_points: 10
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 1
+
+  cyclist-1:
+    file: 'obj/cyclist-1.obj'
+    scale:
+      range: [ 1.65, 2 ]
+      n_points: 10
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 0
+    class: 2
+
+  car-2:
+    file: 'obj/car-2.obj'
+    scale:
+      range: [ 1.5, 3 ]
+      n_points: 10
+    rotate_y:
+      range: [ 90, 90 ]
+      n_points: 1
+    ry_init: 180
+    class: 3
+
+  car-3:
+    file: 'obj/car-3.obj'
+    scale:
+      range: [ 1.5, 3 ]
+      n_points: 10
+    rotate_y:
+      range: [ 0, 90 ]
+      n_points: 5
+    ry_init: 180
+    class: 3

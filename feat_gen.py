@@ -12,17 +12,15 @@ import signal
 import logging
 import yaml
 import argparse
-
 import numpy as np
 import itertools
 
 from libs import lib_feature_extractor as fe, lib_transform_data as tdata, lib_transform_2d as t2d, \
     lib_transform_3d as t3d
-import config as sp
 
 # Set up logging,
 logger = logging.getLogger(__name__)
-logger.setLevel(sp.loglevel)
+logger.setLevel(logging.INFO)
 file_handler = logging.FileHandler('generator.log')
 ch = logging.StreamHandler()
 
@@ -144,6 +142,9 @@ def generate_features(o_key, conf, save_q, stop_event):
     vertices, faces = parse_3d_obj_file(work_obj['file'])
     rw_system = t3d.Handler3D(vertices, operations=['s', 'ry', 't', 'rx'], k=intrinsic_args)
 
+    mar = 1
+    f_margins = {'left': mar, 'right': img_res[0] - mar, 'up': mar, 'bottom': img_res[1] - mar}
+
     data_to_save = list()
     prev_rx, prev_y = None, None
     i = 0
@@ -158,6 +159,10 @@ def generate_features(o_key, conf, save_q, stop_event):
         if basic_params.size == 0:
             continue
         basic_params = t2d.calc_second_point(basic_params)  # Calculate opposite rectangle point and add it to array
+
+        if tdata.is_crossing_margin(f_margins, basic_params):  # Filter objects intersecting frame border
+            continue
+
         # Select row with maximal contour area and add dimension
         basic_params = basic_params[np.argmax(basic_params[:, 0])].reshape(1, basic_params.shape[1])
 

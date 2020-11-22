@@ -19,8 +19,8 @@ obj_global:
     n_points: 1
 
 obj:
-  walking-man:
-    file: 'obj/test-obj.obj'
+  test-obj:
+    file: 'obj/woman-1.obj'
     scale:
       range: [1.8, 1.8]
       n_points: 1

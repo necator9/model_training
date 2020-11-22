@@ -6,7 +6,7 @@
 import pickle
 import pandas as pd
 
-import config as cf  # Columns names are used from the config file
+import map as cf  # Columns names are used from the config file
 
 
 def write_to_csv(header_, data_, out_file):
@@ -53,3 +53,12 @@ def clean_by_margin(df_data_or, margin=1, img_res=(1280, 720)):
                            (df_data_or[y_px_k] > margin) &
                            (df_data_or[y_px_k] + df_data_or[h_px_k] < img_res[1] - margin)]
     return df_data_p
+
+
+def is_crossing_margin(f_margins, basic_params):
+    margin_filter_mask = ((basic_params[:, 1] > f_margins['left']) &  # Built filtering mask
+                          (basic_params[:, 5] < f_margins['right']) &
+                          (basic_params[:, 2] > f_margins['up']) &
+                          (basic_params[:, 6] < f_margins['bottom']))
+
+    return basic_params[margin_filter_mask].size == 0
