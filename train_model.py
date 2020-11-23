@@ -29,13 +29,7 @@ logger.addHandler(ch)
 logger.addHandler(file_handler)
 
 
-if len(sys.argv) != 4:
-    print('\n\nUsage: ./script [path_to_features.csv] [path_to_noises.csv] [classifier_path_name]\n'
-          'All arguments are obligatory.\n')
-    sys.exit()
-
-
-def read_dataframe(target_df_path, noises_df_path, image_res):
+def read_dataframe(target_df_path, noises_df_path):
     """
     Read the source training data from files and filter it
     :param target_df_path: path to csv file containing objects' features
@@ -70,7 +64,7 @@ def prepare_data_for_training(full_dataframe, features_cols):
     return x_tr, y_tr, poly_scale
 
 
-def train_cassifier(x_tr, y_tr):
+def train_classifier(x_tr, y_tr):
     """
     Fit the classifier model using given features and labels
     :param x_tr: features
@@ -89,12 +83,11 @@ if __name__ == '__main__':
     """
     Train a single classifier for all given camera angle/height scenarios
     """
-    image_res = cf.processing_scene['img_res']
-    dt = read_dataframe(sys.argv[1], sys.argv[2], image_res)
+    dt = read_dataframe(sys.argv[1], sys.argv[2])
     # Name of columns are used for training
     feature_vector = [cf.w_k, cf.h_k, cf.ca_k, cf.z_k, cf.cam_y_k, cf.cam_a_k]
     X_train, y_train, poly = prepare_data_for_training(dt, feature_vector)
-    clf = train_cassifier(X_train, y_train)
+    clf = train_classifier(X_train, y_train)
 
     # Dump objects of classifier and polynomial transformer to files
     tdata.dump_object(sys.argv[3] + '_clf.pcl', clf)

@@ -9,8 +9,8 @@ obj_global:
     range: [1, 26]
     n_points: 1
   x_range:
-    range: [-2, -2]
-    n_points: 1
+    range: [-2, 2]
+    n_points: 10
   y_range:
     range: [ -3.4, -3.4 ]
     n_points: 1
@@ -22,8 +22,8 @@ obj:
   test-obj:
     file: 'obj/woman-1.obj'
     scale:
-      range: [1.8, 1.8]
-      n_points: 1
+      range: [1.8, 1.9]
+      n_points: 2
     rotate_y:
       range: [0, 0]
       n_points: 1

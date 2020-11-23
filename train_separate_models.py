@@ -4,10 +4,10 @@
 # Train multiple classifiers' models, each for particular camera height and angle scenario
 # Dump a result as a dictionary: data[height][angle] correspond to a classifier
 
-import sys
 import itertools
 import logging
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
+import argparse
 
 import train_model as tm
 from libs import lib_transform_data as tdata
@@ -56,7 +56,7 @@ def train_single_clf(height, angle, filtered_df):
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
     feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
-    clf = tm.train_cassifier(x_train, y_train)
+    clf = tm.train_classifier(x_train, y_train)
     logger.info('Trained for height: {}, angle: {}, date shape: {}'.format(height, angle, x_train.shape))
 
     return height, angle, clf, poly
@@ -82,8 +82,14 @@ def build_dictionary(it_params):
 
 
 if __name__ == '__main__':
-    image_res = cf.processing_scene['img_res']
-    dt = tm.read_dataframe(sys.argv[1], sys.argv[2], image_res)
+    parser = argparse.ArgumentParser(description='Train the logistic regression classifier')
+    parser.add_argument('features', action='store', help="path to the features csv file")
+    parser.add_argument('noises', action='store', help="path to the noises csv file")
+    parser.add_argument('-c', '--clf', action='store', help="path to the output classifier (default: clf.pcl)",
+                        default='clf.pcl')
+    args = parser.parse_args()
+
+    dt = tm.read_dataframe(args.features, args.noises)
 
     angles = dt[cf.cam_a_k].unique()
     heights = dt[cf.cam_y_k].unique()
@@ -100,4 +106,4 @@ if __name__ == '__main__':
 
     result_dict = build_dictionary(result)
     # Dump dictionary with multiple training cases
-    tdata.dump_object(sys.argv[3], result_dict)
+    tdata.dump_object(args.clf, result_dict)
