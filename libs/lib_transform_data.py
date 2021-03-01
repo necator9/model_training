@@ -61,4 +61,5 @@ def is_crossing_margin(f_margins, basic_params):
                           (basic_params[:, 2] > f_margins['up']) &
                           (basic_params[:, 6] < f_margins['bottom']))
 
-    return basic_params[margin_filter_mask].size == 0
+    crossing = True if False in margin_filter_mask else False
+    return crossing
