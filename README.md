@@ -1,7 +1,11 @@
 # Generate synthetic features and train the logistic regression classifier
 This scripts are used to train the classifier for the [lightweight detection algorithm](https://github.com/necator9/detection_method).
 
-## 1. Generate synthetic features using 3D models of objects 
+## 1. Install requirements
+```text
+pip3 install -r requirements.txt
+```
+## 2. Generate synthetic features using 3D models of objects 
 ### Usage
 ```text
 usage: feat_gen.py [-h] [--csv CSV] [--show] config
@@ -48,7 +52,7 @@ Important keys:
 | scale | scaling the object along y axis (the desired height  of the object in meters), the scaling is uniform |
 
 
-## 2. Generate noises
+## 3. Generate noises
 Pass the path to generated features as CL argument and run the script to generate noises.
 
 ### Usage 
@@ -68,7 +72,7 @@ optional arguments:
                         amount of points per hull (default: 40000)
 ```
 
-## 3. Train logistic regression classifier
+## 4. Train logistic regression classifier
 Pass the path to generated features and noises as CL arguments and run the script.
 
 ### Usage 

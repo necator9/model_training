@@ -1,3 +1,5 @@
+#!/usr/bin/env python3.7
+
 # Created by Ivan Matveev at 06.05.20
 # E-mail: ivan.matveev@hs-anhalt.de
 
