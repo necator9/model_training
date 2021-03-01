@@ -36,7 +36,7 @@ def dump_object(path, obj):
     :param obj: object to save
     """
     with open(path, 'wb') as handle:
-        pickle.dump(obj, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(obj, handle, protocol=4)
 
 
 def clean_by_margin(df_data_or, margin=1, img_res=(1280, 720)):
