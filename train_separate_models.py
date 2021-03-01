@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.7
+#!/usr/bin/env python3
 
 # Created by Ivan Matveev at 06.05.20
 # E-mail: ivan.matveev@hs-anhalt.de
@@ -47,16 +47,16 @@ def select_slice(dataframe, keys_vals):
     return dataframe
 
 
-def train_single_clf(height, angle, filtered_df):
+def train_single_clf(feature_vector, height, angle, filtered_df):
     """
     Worker function to train classifiers in parallel
+    :param feature_vector: Name of columns are used for training
     :param height: considering camera height
     :param angle: considering camera angle
     :param filtered_df: dataframe corresponding filtered by height and width
     :return: height, angle to be used as keys, classifier and polynomial transformer
     """
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
-    feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
     clf = tm.train_classifier(x_train, y_train)
     logger.info('Trained for height: {}, angle: {}, date shape: {}'.format(height, angle, x_train.shape))
@@ -102,8 +102,9 @@ if __name__ == '__main__':
     # Drop cases with insufficient data filling, which are marked as None
     iterate = [[height, angle, df] for height, angle, df in iterate if df is not None]
     logger.info('Total amount of scenes: {}'.format(len(iterate)))
+    feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     # Run jobs in parallel using all the cores
-    result = Parallel(n_jobs=-1)(delayed(train_single_clf)(height, angle, dataframe)
+    result = Parallel(n_jobs=-1)(delayed(train_single_clf)(feature_vector, height, angle, dataframe)
                                  for height, angle, dataframe in iterate)
 
     result_dict = build_dictionary(result)
