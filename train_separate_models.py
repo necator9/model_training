@@ -102,7 +102,7 @@ if __name__ == '__main__':
     # Drop cases with insufficient data filling, which are marked as None
     iterate = [[height, angle, df] for height, angle, df in iterate if df is not None]
     logger.info('Total amount of scenes: {}'.format(len(iterate)))
-    feature_vector = [cf.w_k, cf.h_k, cf.z_k, cf.ca_k]  # Name of columns are used for training  cf.ca_k,
+    feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     # Run jobs in parallel using all the cores
     result = Parallel(n_jobs=-1)(delayed(train_single_clf)(feature_vector, height, angle, dataframe)
                                  for height, angle, dataframe in iterate)
