@@ -30,8 +30,8 @@ def select_slice(dataframe, keys_vals):
         dataframe = dataframe[dataframe[key] == val]
 
     if dataframe.shape[0] < 100:    # Skip too small data sets
-        logger.warning("Amount of rows in dataframe is not sufficient. "
-                       "Scene: {}\nSkipping the scene".format([(key, val) for key, val in keys_vals.items()]))
+        logger.warning(f'Amount of rows in dataframe is not sufficient. '
+                       f'Scene: {[(key, val) for key, val in keys_vals.items()]}\nSkipping the scene')
         return None
 
     return dataframe
@@ -49,7 +49,7 @@ def train_single_clf(feature_vector, height, angle, filtered_df):
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
     clf = tm.train_classifier(x_train, y_train)
-    logger.info('Trained for height: {}, angle: {}, date shape: {}'.format(height, angle, x_train.shape))
+    logger.info(f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}')
 
     return height, angle, clf, poly
 
@@ -75,9 +75,9 @@ def build_dictionary(it_params):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Train the logistic regression classifier')
-    parser.add_argument('features', action='store', help="path to the features csv file")
-    parser.add_argument('noises', action='store', help="path to the noises csv file")
-    parser.add_argument('-c', '--clf', action='store', help="path to the output classifier (default: clf.pcl)",
+    parser.add_argument('features', action='store', help='path to the features csv file')
+    parser.add_argument('noises', action='store', help='path to the noises csv file')
+    parser.add_argument('-c', '--clf', action='store', help='path to the output classifier (default: clf.pcl)',
                         default='clf.pcl')
     args = parser.parse_args()
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     iterate = [[height, angle, select_slice(dt, {cf.cam_y_k: height, cf.cam_a_k: angle})] for height, angle in h_a_it]
     # Drop cases with insufficient data filling, which are marked as None
     iterate = [[height, angle, df] for height, angle, df in iterate if df is not None]
-    logger.info('Total amount of scenes: {}'.format(len(iterate)))
+    logger.info(f'Total amount of scenes: {len(iterate)}')
     feature_vector = [cf.w_k, cf.h_k, cf.z_k]  # Name of columns are used for training  cf.ca_k,
     # Run jobs in parallel using all the cores
     result = Parallel(n_jobs=-1)(delayed(train_single_clf)(feature_vector, height, angle, dataframe)

@@ -30,10 +30,8 @@ def read_dataframe(target_df_path, noises_df_path):
     target_df = pd.read_csv(target_df_path)
     noises_df = pd.read_csv(noises_df_path)
     full_dataframe = pd.concat([noises_df, target_df])
-
-    logger.info('Input data shape: {}'.format(full_dataframe.shape))
-    logger.info('Cases: angles {}, heights {}'.format(full_dataframe[cf.cam_a_k].unique(),
-                                                      full_dataframe[cf.cam_y_k].unique()))
+    logger.info(f'Input data shape: {full_dataframe.shape}')
+    logger.info(f'Cases: angles {full_dataframe[cf.cam_a_k].unique()}, heights { full_dataframe[cf.cam_y_k].unique()}')
 
     return full_dataframe
 
@@ -48,7 +46,6 @@ def prepare_data_for_training(full_dataframe, features_cols):
     # All meaningful features
     x_tr = np.stack([full_dataframe[key] for key in features_cols], axis=1)
     y_tr = full_dataframe[cf.o_class_k]
-
     poly_scale = PolynomialFeatures(2, include_bias=True)  # Increase features polynomial order
     x_tr = poly_scale.fit_transform(x_tr)
 

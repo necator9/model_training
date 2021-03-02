@@ -103,7 +103,7 @@ def gen_noises(iterator, features, classes, n_points):
 
                 # Skip cases when the surface is flat (values one of some column are not varying)
                 except qhull.QhullError:
-                    logger.warning('Skipping the case. Angle {}, height {}, class {} '.format(angle, height, i))
+                    logger.warning(f'Skipping the case. Angle {angle}, height {height}, class {i}')
                     continue
 
             if len(hulls) == 0:
@@ -129,16 +129,16 @@ def gen_noises(iterator, features, classes, n_points):
             logger.info(get_status(it, total_iterations))
 
         except ValueError:
-            logger.warning("No such angle {} or height {}".format(angle, height))
+            logger.warning(f'No such angle {angle} or height {height}')
 
     return out_data_temp
 
 
 parser = argparse.ArgumentParser(description='Generate noises around features')
-parser.add_argument('features', action='store', help="path to the features csv file")
-parser.add_argument('-n', '--noises', action='store', help="path to the output csv file containing noises features"
-                                                           " (default:noises.csv )", default='noises.csv')
-parser.add_argument('-p', '--points', action='store', type=int, help="amount of points per hull (default: 40000)",
+parser.add_argument('features', action='store', help='path to the features csv file')
+parser.add_argument('-n', '--noises', action='store', help='path to the output csv file containing noises features'
+                                                           ' (default:noises.csv )', default='noises.csv')
+parser.add_argument('-p', '--points', action='store', type=int, help='amount of points per hull (default: 40000)',
                     default=40000)
 args = parser.parse_args()
 
@@ -151,8 +151,8 @@ it_params = itertools.product(angle_rg, height_rg)
 o_classes = obj_features[cfg.o_class_k].unique()
 
 total_iterations = len(angle_rg) * len(height_rg)
-logger.info('Total iterations: {}'.format(total_iterations))
-logger.info('Camera height range: {}\nCamera angle range: {}'.format(height_rg, angle_rg))
+logger.info(f'Total iterations: {total_iterations}')
+logger.info(f'Camera height range: {height_rg}\nCamera angle range: {angle_rg}')
 noise = gen_noises(it_params, obj_features, o_classes, args.points)
 noise = pd.DataFrame(noise, columns=[cfg.w_k, cfg.h_k, cfg.ca_k, cfg.z_k, cfg.cam_y_k, cfg.cam_a_k])
 noise[cfg.o_class_k] = 0

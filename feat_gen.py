@@ -88,11 +88,11 @@ def parse_3d_obj_file(path):
         res = [el[0] for i, el in enumerate(spl) if i != 0]
         return res
 
-    with open(path, "r") as fi:
+    with open(path, 'r') as fi:
         lines = fi.readlines()
 
-    vertices = np.array([parse_string(ln) for ln in lines if ln.startswith("v")], dtype='float')
-    faces = [parse_string(ln) for ln in lines if ln.startswith("f")]
+    vertices = np.array([parse_string(ln) for ln in lines if ln.startswith('v')], dtype='float')
+    faces = [parse_string(ln) for ln in lines if ln.startswith('f')]
     faces = np.asarray([[int(el) for el in ln] for ln in faces]) - 1
 
     vertices = np.hstack((vertices, np.ones((vertices.shape[0], 1))))  # Bring to homogeneous form
@@ -101,7 +101,7 @@ def parse_3d_obj_file(path):
 
 
 def get_status(i, total_iter):
-    return '{:3.2f} %, {} / {}'.format(i / total_iter * 100, i, total_iter)
+    return f'{i / total_iter * 100:3.2f} %, {i} / {total_iter}'
 
 
 def generate_features(o_key, conf, save_q, stop_event):
@@ -114,7 +114,7 @@ def generate_features(o_key, conf, save_q, stop_event):
     """
     multiprocessing.current_process().name = o_key  # Set process name
     it, total_iter = init_iterator(conf, o_key)  # Generate iterator from parameters in config
-    logger.info("Total iterations: {}".format(total_iter))
+    logger.info(f'Total iterations: {total_iter}')
 
     work_obj = conf['obj'][o_key]
     ry_init = work_obj['ry_init']
@@ -186,7 +186,7 @@ def generate_features(o_key, conf, save_q, stop_event):
     if len(data_to_save) > 0:
         save_q.put(data_to_save)
 
-    logger.info('Finished {}'.format(get_status(i + 1, total_iter)))
+    logger.info(f'Finished {get_status(i + 1, total_iter)}')
 
 
 def saver_thr(out_f, q, stop_event):
@@ -202,24 +202,24 @@ def saver_thr(out_f, q, stop_event):
             pass
 
         if stop_event.is_set() and q.empty():
-            logger.info('{} entries has been written'.format(i))
+            logger.info(f'{i} entries has been written')
             break
 
 
 def del_if_exists(out_f):
     if os.path.exists(out_f):
         os.remove(out_f)
-        logger.warning('Previous output file removed: {} '.format(out_f))
+        logger.warning(f'Previous output file removed: {out_f}')
     else:
-        logger.info(' Output file: {}'.format(out_f))
+        logger.info(f'Output file: {out_f}')
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Generate features of 3D objects')
-    parser.add_argument('config', action='store', help="path to the configuration file")
-    parser.add_argument('--csv', action='store', help="path to the output csv file (default:features.csv )",
+    parser.add_argument('config', action='store', help='path to the configuration file')
+    parser.add_argument('--csv', action='store', help='path to the output csv file (default:features.csv )',
                         default='features.csv')
-    parser.add_argument('--show', action='store_true', help="show the generated images")
+    parser.add_argument('--show', action='store_true', help='show the generated images')
     args = parser.parse_args()
     config = yaml.safe_load(open(args.config))
 
