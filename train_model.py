@@ -5,8 +5,9 @@
 
 # Train a logistic regression classifier based on previously generated data (target objects + noises)
 
+# !! DEPRECATED !!
+
 import sys
-import logging
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
@@ -14,19 +15,9 @@ from sklearn.preprocessing import PolynomialFeatures
 
 import map as cf
 from libs import lib_transform_data as tdata
+from libs import lib_logging as log
 
-# Set up logging,
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler(__name__ + '.log')
-ch = logging.StreamHandler()
-
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-file_handler.setFormatter(formatter)
-ch.setFormatter(formatter)
-
-logger.addHandler(ch)
-logger.addHandler(file_handler)
+logger = log.spawn_logger(f'{__file__}.log')
 
 
 def read_dataframe(target_df_path, noises_df_path):

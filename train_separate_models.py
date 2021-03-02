@@ -7,26 +7,16 @@
 # Dump a result as a dictionary: data[height][angle] correspond to a classifier
 
 import itertools
-import logging
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
 import argparse
 
 import train_model as tm
 from libs import lib_transform_data as tdata
 import map as cf
+from libs import lib_logging as log
 
-# Set up logging,
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler(__name__ + '.log')
-ch = logging.StreamHandler()
 
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-file_handler.setFormatter(formatter)
-ch.setFormatter(formatter)
-
-logger.addHandler(ch)
-logger.addHandler(file_handler)
+logger = log.spawn_logger(f'{__file__}.log')
 
 
 def select_slice(dataframe, keys_vals):

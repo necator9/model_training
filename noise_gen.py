@@ -13,19 +13,13 @@ import itertools
 import numpy as np
 import pandas as pd
 
-import logging
+from libs import lib_logging as log
 import argparse
 
 from feat_gen import get_status
 import map as cfg
 
-# Set up logging to stdout
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-ch = logging.StreamHandler()
-formatter = logging.Formatter('%(asctime)s - %(message)s')
-ch.setFormatter(formatter)
-logger.addHandler(ch)
+logger = log.spawn_logger(f'{__file__}.log')
 
 
 def get_hull(cnt_data):

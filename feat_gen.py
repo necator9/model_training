@@ -9,27 +9,15 @@ import os
 import multiprocessing
 import queue
 import signal
-import logging
 import yaml
 import argparse
 import numpy as np
 import itertools
 
 from libs import lib_feature_extractor as fe, lib_transform_data as tdata, lib_transform_2d as t2d, \
-    lib_transform_3d as t3d
+    lib_transform_3d as t3d, lib_logging as log
 
-# Set up logging,
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-file_handler = logging.FileHandler('generator.log')
-ch = logging.StreamHandler()
-
-formatter = logging.Formatter('%(asctime)s %(processName)s - %(message)s')
-file_handler.setFormatter(formatter)
-ch.setFormatter(formatter)
-
-logger.addHandler(ch)
-logger.addHandler(file_handler)
+logger = log.spawn_logger(f'{__file__}.log', formatter='%(asctime)s %(processName)s - %(message)s')
 
 
 # Ignore keyboard interrupt in forks, let parent process to handle this gently
