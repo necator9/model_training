@@ -1,5 +1,4 @@
 # Configuration file containing parameters synthetic data generation
-
 camera:
   params: 'camera_matrices/calibration_opt.yml'
   angle:

@@ -219,7 +219,7 @@ if __name__ == '__main__':
     parser.add_argument('config', action='store', help='path to the configuration file')
     parser.add_argument('--csv', action='store', help='path to the output csv file (default:features.csv )',
                         default='features.csv')
-    parser.add_argument('--show', action='store_true', help='show the generated images')
+    parser.add_argument('--show', action='store_true', help='show the generated images (for debug only)')
     args = parser.parse_args()
     config = yaml.safe_load(open(args.config))
 

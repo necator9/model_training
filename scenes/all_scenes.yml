@@ -3,7 +3,7 @@
 camera:
   params: 'camera_matrices/calibration_opt.yml'
   angle:
-    range: [0, 90]
+    range: [0, -90]
     n_points: 46
 
 obj_global:
@@ -14,11 +14,11 @@ obj_global:
     range: [-8, 8]
     n_points: 9
   y_range:
-    range: [ -3, -6 ]
+    range: [-3, -6]
     n_points: 11
   z_range:
-    range: [ 1, 30 ]
-    n_points: 30
+    range: [1, 25]
+    n_points: 25
 
 obj:
   walking-man:
@@ -35,10 +35,10 @@ obj:
   woman-1:
     file: 'obj/woman-1.obj'
     scale:
-      range: [ 1.4, 1.95 ]
+      range: [1.4, 1.95]
       n_points: 10
     rotate_y:
-      range: [ 0, 90 ]
+      range: [0, 90]
       n_points: 5
     ry_init: 180
     class: 1
@@ -46,10 +46,10 @@ obj:
   running-boy:
     file: 'obj/running-boy.obj'
     scale:
-      range: [ 1.4, 1.95 ]
+      range: [1.4, 1.95]
       n_points: 10
     rotate_y:
-      range: [ 0, 90 ]
+      range: [0, 90]
       n_points: 5
     ry_init: 180
     class: 1
@@ -57,10 +57,10 @@ obj:
   standing-man:
     file: 'obj/standing-man.obj'
     scale:
-      range: [ 1.4, 1.95 ]
+      range: [1.4, 1.95]
       n_points: 10
     rotate_y:
-      range: [ 0, 90 ]
+      range: [0, 90]
       n_points: 5
     ry_init: 180
     class: 1
@@ -68,10 +68,10 @@ obj:
   cyclist-1:
     file: 'obj/cyclist-1.obj'
     scale:
-      range: [ 1.65, 2 ]
+      range: [1.65, 2]
       n_points: 10
     rotate_y:
-      range: [ 0, 90 ]
+      range: [0, 90]
       n_points: 5
     ry_init: 0
     class: 2
@@ -79,10 +79,10 @@ obj:
   car-2:
     file: 'obj/car-2.obj'
     scale:
-      range: [ 1.5, 3 ]
+      range: [1.5, 3]
       n_points: 10
     rotate_y:
-      range: [ 90, 90 ]
+      range: [90, 90]
       n_points: 1
     ry_init: 180
     class: 3
@@ -90,10 +90,10 @@ obj:
   car-3:
     file: 'obj/car-3.obj'
     scale:
-      range: [ 1.5, 3 ]
+      range: [1.5, 3]
       n_points: 10
     rotate_y:
-      range: [ 0, 90 ]
+      range: [0, 90]
       n_points: 5
     ry_init: 180
     class: 3
