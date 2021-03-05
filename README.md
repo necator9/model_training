@@ -1,7 +1,7 @@
 # Training a classification model for the [lightweight detection algorithm](https://github.com/necator9/detection_method)  
 The following steps describe the process of synthetic features and noises generation, and training a logistic regression classifier.
 
-![Training pipeline](doc/img/overall_block_diagram.png)
+![Training pipeline](doc/img/overall_diagram.png)
 
 ## 1. [Camera calibration](https://github.com/necator9/video2calibration)
 ## 2. [Camera matrix optimization](https://github.com/necator9/get_optimal_cam_mtx)
