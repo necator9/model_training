@@ -72,7 +72,33 @@ For example:
 
 The output of this script is a `csv` file containing object features for classifier training.
 
+Names of columns used in the output `csv` can be changed in `map.py` which has the following mapping by default:
 
+| column | description |
+|---|---|
+| cam_a | camera incline relative to a ground surface, deg |
+| y | ground surface offset (negative camera height) relative to a camera origin, m |
+| z_est | distance to the closest object point (for a camera) estimated by feature extractor, m |
+| z | real object distance the closest object point (for a camera), m |
+| x_est | central object x coordinate estimated by feature extractor, m |
+| x | real central object x coordinate, m |
+| width_est | object width estimated by feature extractor, m |
+| ww | real object width, m |
+| height_est | object height estimated by feature extractor, m |
+| hh | real object height, m | 
+| rw_ca_est | object contour area estimated by feature extractor, m2 |
+| o_name | unique name of an object |
+| o_class | object class as an integer, where 0 is a noise class |
+| ry | initial offset of r_y (some objects are initially rotated by back to a camera) |
+| x_px | left upper x coordinate of an object bounding rectangle in image plane, px |
+| y_px | left upper y coordinate of an object bounding rectangle in image plane, px |
+| w_px| width of an object bounding rectangle in image plane, px |
+| h_px | height of an object bounding rectangle in image plane, px |
+| c_ar_px | object contour area in image plane, px |
+| thr | size of the used kernel for morphological dilate on the resulting mask to imitate motion blur| 
+| dd | real object depth, m |
+
+Note that only a few generated features are used for classifier training, the rest is useful for debugging on the stage of features evaluation.
 ## 4. Generate noises
 Pass the path to generated features (step 3.3) as CL argument and run the script to generate noises.
 

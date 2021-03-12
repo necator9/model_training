@@ -18,11 +18,11 @@ def write_to_csv(header_, data_, out_file):
     :return: header status. Once header have been written, the status changed to False
     """
     x_px_k, y_px_k, w_px_k, h_px_k = cf.b_rec_k
-    df = pd.DataFrame(data_, columns=[cf.cam_a_k, cf.cam_y_k, cf.z_k, 'z', 'x_est', 'x', cf.w_k, 'ww', cf.h_k, 'hh',
-                                      cf.ca_k, cf.o_name_k, cf.o_class_k, 'ry', x_px_k, y_px_k, w_px_k, h_px_k,
-                                      'c_ar_px', 'thr', 'dd'])
-    df = df.round({cf.z_k: 2, 'x_est': 2, cf.ca_k: 3, cf.w_k: 2, cf.h_k: 2, 'x': 2, cf.cam_y_k: 2, 'z': 2,
-                  cf.cam_a_k: 1, 'ry': 1, 'ww': 2, 'hh': 2, 'dd': 2, cf.o_class_k: 0})
+    df = pd.DataFrame(data_, columns=[cf.cam_a_k, cf.cam_y_k, cf.z_est_k, cf.z_k, cf.x_est_k, cf.x_k, cf.w_est_k,
+                                      cf.ww_k, cf.h_est_k, cf.hh_k, cf.ca_est_k, cf.o_name_k, cf.o_class_k, cf.ry_k, x_px_k,
+                                      y_px_k, w_px_k, h_px_k, cf.c_ar_px_k, cf.thr_k, cf.dd_k])
+    df = df.round({cf.z_est_k: 2, cf.x_est_k: 2, cf.ca_est_k: 3, cf.w_est_k: 2, cf.h_est_k: 2, cf.x_k: 2, cf.cam_y_k: 2, cf.z_k: 2,
+                   cf.cam_a_k: 1, cf.ry_k: 1, cf.ww_k: 2, cf.hh_k: 2, cf.dd_k: 2, cf.o_class_k: 0})
     with open(out_file, 'a') as f:
         df.to_csv(f, header=header_, index=False)
 

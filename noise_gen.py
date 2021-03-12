@@ -90,15 +90,15 @@ def gen_noises(iterator, features, classes, n_points):
             # Select one slice with particular angle and height
             a_h_data = features[(features[cfg.cam_a_k] == angle) & (features[cfg.cam_y_k] == height)]
             # Find border values for ranges of important basic features
-            w_rg = find_rg((a_h_data[cfg.w_k].min(), a_h_data[cfg.w_k].max()))
-            h_rg = find_rg((a_h_data[cfg.h_k].min(), a_h_data[cfg.h_k].max()))
+            w_rg = find_rg((a_h_data[cfg.w_est_k].min(), a_h_data[cfg.w_est_k].max()))
+            h_rg = find_rg((a_h_data[cfg.h_est_k].min(), a_h_data[cfg.h_est_k].max()))
             hulls = []
             # Iterate through the object classes
             for i in classes:
                 try:
                     # Select and transform to required form
                     df = a_h_data[a_h_data[cfg.o_class_k] == i]
-                    df = np.vstack([df[cfg.w_k], df[cfg.h_k]]).T
+                    df = np.vstack([df[cfg.w_est_k], df[cfg.h_est_k]]).T
                     hulls.append(get_hull(df))  # Generate 2-dim hull for each class
 
                 # Skip cases when the surface is flat (values one of some column are not varying)
@@ -112,7 +112,7 @@ def gen_noises(iterator, features, classes, n_points):
             # Generate features of width and height for a class of noise
             w_h = gen_w_h(hulls, n_points, w_rg, h_rg)
             # Find available distance range
-            d_rg = find_rg((a_h_data[cfg.z_k].min(), a_h_data[cfg.z_k].max()), margin=0.5)
+            d_rg = find_rg((a_h_data[cfg.z_est_k].min(), a_h_data[cfg.z_est_k].max()), margin=0.5)
             # d = np.expand_dims(np.array([round(i) for i in np.random.uniform(*d_rg, size=[points_amount, 1])]), axis=1)
             d = np.random.uniform(*d_rg, size=[n_points, 1])  # Fill the distance range uniformly
 
@@ -154,8 +154,8 @@ total_iterations = len(angle_rg) * len(height_rg)
 logger.info(f'Total iterations: {total_iterations}')
 logger.info(f'Camera height range: {height_rg}\nCamera angle range: {angle_rg}')
 noise = gen_noises(it_params, obj_features, o_classes, args.points)
-noise = pd.DataFrame(noise, columns=[cfg.w_k, cfg.h_k, cfg.ca_k, cfg.z_k, cfg.cam_y_k, cfg.cam_a_k])
+noise = pd.DataFrame(noise, columns=[cfg.w_est_k, cfg.h_est_k, cfg.ca_est_k, cfg.z_est_k, cfg.cam_y_k, cfg.cam_a_k])
 noise[cfg.o_class_k] = 0
 
-noise = noise.round({cfg.z_k: 2, cfg.ca_k: 3, cfg.w_k: 2, cfg.h_k: 2, cfg.cam_y_k: 2, cfg.cam_a_k: 1, cfg.o_class_k: 0})
+noise = noise.round({cfg.z_est_k: 2, cfg.ca_est_k: 3, cfg.w_est_k: 2, cfg.h_est_k: 2, cfg.cam_y_k: 2, cfg.cam_a_k: 1, cfg.o_class_k: 0})
 noise.to_csv(args.noises, index=False)

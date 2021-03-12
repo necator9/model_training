@@ -73,7 +73,7 @@ if __name__ == '__main__':
     """
     dt = read_dataframe(sys.argv[1], sys.argv[2])
     # Name of columns are used for training
-    feature_vector = [cf.w_k, cf.h_k, cf.ca_k, cf.z_k, cf.cam_y_k, cf.cam_a_k]
+    feature_vector = [cf.w_est_k, cf.h_est_k, cf.ca_est_k, cf.z_est_k, cf.cam_y_k, cf.cam_a_k]
     X_train, y_train, poly = prepare_data_for_training(dt, feature_vector)
     clf = train_classifier(X_train, y_train)
 
