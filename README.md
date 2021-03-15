@@ -47,8 +47,15 @@ Parameters to set camera intrinsics and camera angle
 | ry_init| initial offset of r_y (some objects are initially rotated by back to a camera) | 
 | class | integer object class used for training and classification |
 
+### 3.3 Adjust camera parameters
 
-### 3.3 Generate features 
+Camera parameters are set using the key `params` of the main config described above.
+
+- Generate base file containing camera parameters via [camera matrix optimization](https://github.com/necator9/get_optimal_cam_mtx) 
+  which requires preliminary [camera calibration](https://github.com/necator9/get_optimal_cam_mtx)
+- **Manually add field** `focal_length` to the  base file with camera parameters. 
+  The `focal_length` is measured in mm and can be found in camera documentation.
+### 3.4 Generate features 
 
 ```text
 usage: feat_gen.py [-h] [--csv CSV] [--show] config
