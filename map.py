@@ -1,4 +1,4 @@
-# Mapping the most column names in csv file
+# Mapping column names in csv file
 # Used for feature generation and training
 
 cam_a_k = 'cam_a'         # Camera incline relative to a ground surface, deg

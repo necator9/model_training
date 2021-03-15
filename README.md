@@ -125,7 +125,11 @@ For example:
 ```
 The output of this script is a `csv` file containing noises features for classifier training.
 
-## 5. Train the logistic regression classifier
+## 5. Evaluate feature distribution
+Use the `eval_notebooks/eval_acc.ipynb` (jupyter-notebook) to plot the generated features. 
+Make sure that features for all the required classes are represented in plots. 
+
+## 6. Train the logistic regression classifier
 Pass the path to generated features and noises as CL arguments and run the script.
 
 ```text
