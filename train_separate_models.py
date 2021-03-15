@@ -10,8 +10,7 @@ import itertools
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
 import argparse
 
-import train_model as tm
-from libs import lib_transform_data as tdata
+from libs import lib_transform_data as tdata, train_model as tm
 import map as cf
 from libs import lib_logging as log
 
@@ -50,6 +49,7 @@ def train_single_clf(feature_vector, height, angle, filtered_df):
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
     clf = tm.train_classifier(x_train, y_train)
     logger.info(f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}')
+    logger.info(tm.estimate_clf(clf, x_train, y_train))
 
     return height, angle, clf, poly
 

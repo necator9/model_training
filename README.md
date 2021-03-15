@@ -48,7 +48,7 @@ Parameters to set camera intrinsics and camera angle
 | class | integer object class used for training and classification |
 
 
-### 3.3 Start features generation
+### 3.3 Generate features 
 
 ```text
 usage: feat_gen.py [-h] [--csv CSV] [--show] config

@@ -5,13 +5,13 @@
 
 # Train a logistic regression classifier based on previously generated data (target objects + noises)
 
-# !! DEPRECATED !!
 
 import sys
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix
 
 import map as cf
 from libs import lib_transform_data as tdata
@@ -65,6 +65,22 @@ def train_classifier(x_tr, y_tr):
     log_reg.fit(x_tr, y_tr)
 
     return log_reg
+
+
+def estimate_clf(clf, X_test, y):
+    # Evaluate accuracy
+    def gen_report(y, y_pred):
+        report = 'Precision P=TP/TP+FP\nRecall R=TP/TP+FN\nF1 score F1=2*(P*R)/(P+R)\n'
+        report += f'Accuracy {accuracy_score(y, y_pred)}\n'
+        report += f'{classification_report(y, y_pred)}\n'
+        report += f'{confusion_matrix(y, y_pred)}\n'
+
+        return report
+
+    # Classify the dataset
+    y_pred = clf.predict(X_test)
+    # y_prob = clf.predict_proba(X_test)
+    return gen_report(y, y_pred)
 
 
 if __name__ == '__main__':
