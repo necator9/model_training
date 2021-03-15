@@ -9,6 +9,7 @@
 import itertools
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
 import argparse
+import logging
 
 from libs import lib_transform_data as tdata, train_model as tm
 import map as cf
@@ -45,8 +46,10 @@ def train_single_clf(feature_vector, height, angle, filtered_df):
     :param filtered_df: dataframe corresponding filtered by height and width
     :return: height, angle to be used as keys, classifier and polynomial transformer
     """
+    logger = logging.getLogger(__file__)
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
+    logger.info('Starting the classifier training')
     clf = tm.train_classifier(x_train, y_train)
     logger.info(f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}')
     logger.info(tm.estimate_clf(clf, x_train, y_train))
@@ -82,6 +85,8 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     dt = tm.read_dataframe(args.features, args.noises)
+    logger.info(f'Input data shape: {dt.shape}')
+    logger.info(f'Cases: angles {dt[cf.cam_a_k].unique()}, heights {dt[cf.cam_y_k].unique()}')
 
     angles = dt[cf.cam_a_k].unique()
     heights = dt[cf.cam_y_k].unique()

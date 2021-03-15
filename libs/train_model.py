@@ -15,9 +15,6 @@ from sklearn.metrics import classification_report, accuracy_score, confusion_mat
 
 import map as cf
 from libs import lib_transform_data as tdata
-from libs import lib_logging as log
-
-logger = log.spawn_logger(f'{__file__}.log')
 
 
 def read_dataframe(target_df_path, noises_df_path):
@@ -30,8 +27,6 @@ def read_dataframe(target_df_path, noises_df_path):
     target_df = pd.read_csv(target_df_path)
     noises_df = pd.read_csv(noises_df_path)
     full_dataframe = pd.concat([noises_df, target_df])
-    logger.info(f'Input data shape: {full_dataframe.shape}')
-    logger.info(f'Cases: angles {full_dataframe[cf.cam_a_k].unique()}, heights { full_dataframe[cf.cam_y_k].unique()}')
 
     return full_dataframe
 
@@ -61,7 +56,6 @@ def train_classifier(x_tr, y_tr):
     """
     # Init classifier
     log_reg = LogisticRegression(solver='newton-cg', C=3, multi_class='auto', n_jobs=-1, max_iter=100, verbose=1)
-    logger.info('Starting the classifier training')
     log_reg.fit(x_tr, y_tr)
 
     return log_reg
