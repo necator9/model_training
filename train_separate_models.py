@@ -46,15 +46,14 @@ def train_single_clf(feature_vector, height, angle, filtered_df):
     :param filtered_df: dataframe corresponding filtered by height and width
     :return: height, angle to be used as keys, classifier and polynomial transformer
     """
-    logger = logging.getLogger(__file__)
     # Camera angle and height are not taken into account since they are dictionary keys for particular classifier
     x_train, y_train, poly = tm.prepare_data_for_training(filtered_df, feature_vector)
-    logger.info('Starting the classifier training')
     clf = tm.train_classifier(x_train, y_train)
-    logger.info(f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}')
-    logger.info(tm.estimate_clf(clf, x_train, y_train))
+    report = f'{"-" * 100}\n'
+    report += f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}\n'
+    report += (tm.estimate_clf(clf, x_train, y_train))
 
-    return height, angle, clf, poly
+    return [height, angle, clf, poly], report
 
 
 def build_dictionary(it_params):
@@ -99,8 +98,11 @@ if __name__ == '__main__':
     logger.info(f'Total amount of scenes: {len(iterate)}')
     # feature_vector = [cf.w_est_k, cf.h_est_k, cf.z_est_k]  # Name of columns are used for training  cf.ca_k,
     # Run jobs in parallel using all the cores
-    result = Parallel(n_jobs=-1)(delayed(train_single_clf)(cf.feature_vector, height, angle, dataframe)
+    result, report = Parallel(n_jobs=-1)(delayed(train_single_clf)(cf.feature_vector, height, angle, dataframe)
                                  for height, angle, dataframe in iterate)
+
+    for item in report:
+        logger.info(report)
 
     result_dict = build_dictionary(result)
     # Dump dictionary with multiple training cases
