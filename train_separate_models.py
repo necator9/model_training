@@ -9,7 +9,6 @@
 import itertools
 from joblib import Parallel, delayed  # Run iterative calculations as parallel processes
 import argparse
-import logging
 
 from libs import lib_transform_data as tdata, train_model as tm
 import map as cf
@@ -53,7 +52,7 @@ def train_single_clf(feature_vector, height, angle, filtered_df):
     report += f'Trained for height: {height}, angle: {angle}, date shape: {x_train.shape}\n'
     report += (tm.estimate_clf(clf, x_train, y_train))
 
-    return [height, angle, clf, poly], report
+    return height, angle, clf, poly, report
 
 
 def build_dictionary(it_params):
@@ -64,7 +63,7 @@ def build_dictionary(it_params):
     """
     data = dict()
     poly = None
-    for height, angle, clf, poly in it_params:
+    for height, angle, clf, poly, _ in it_params:
         temp_dict = {angle: clf}
         try:
             data[height].update(temp_dict)
@@ -98,11 +97,11 @@ if __name__ == '__main__':
     logger.info(f'Total amount of scenes: {len(iterate)}')
     # feature_vector = [cf.w_est_k, cf.h_est_k, cf.z_est_k]  # Name of columns are used for training  cf.ca_k,
     # Run jobs in parallel using all the cores
-    result, report = Parallel(n_jobs=-1)(delayed(train_single_clf)(cf.feature_vector, height, angle, dataframe)
+    result = Parallel(n_jobs=-1)(delayed(train_single_clf)(cf.feature_vector, height, angle, dataframe)
                                  for height, angle, dataframe in iterate)
 
-    for item in report:
-        logger.info(report)
+    for item in result:
+        logger.info(item[-1])
 
     result_dict = build_dictionary(result)
     # Dump dictionary with multiple training cases
