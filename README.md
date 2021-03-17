@@ -1,5 +1,6 @@
 # Training a classification model for the [lightweight detection algorithm](https://github.com/necator9/detection_method)  
 The following steps describe the process of synthetic features and noises generation, and training a logistic regression classifier.
+Implementation of the method is based on the publication [“Fast Object Detection Using Dimensional Based Features for Public Street Environments”](https://www.mdpi.com/2624-6511/3/1/6).
 
 ![Training pipeline](doc/img/overall_diagram.png)
 
@@ -184,3 +185,7 @@ For example:
 ```
 
 The detection algorithm extracts `'poly'` and required classifier model depending on concrete usage scenario (set in config file of the detection algorithm).
+
+# Cite
+
+I. Matveev, K. Karpov, I. Chmielewski, E. Siemens, and A. Yurchenko, “Fast Object Detection Using Dimensional Based Features for Public Street Environments,” Smart Cities, vol. 3, no. 1, Art. no. 1, Mar. 2020, doi: 10.3390/smartcities3010006.
