@@ -37,6 +37,8 @@ Parameters to set camera intrinsics and camera angle
 | y_range  | ground surface coordinates in meters relatively to a camera origin (e.g. -5 is 5m of camera height)  |
 | z_range | distance to an object from camera in meters |
 
+![Axis orientation](doc/img/axis.png)
+
 #### Section `obj:object_name`
 
 | key | description |
