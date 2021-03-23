@@ -108,7 +108,9 @@ Names of columns used in the output `csv` can be changed in `map.py` which has t
 | thr | size of the used kernel for morphological dilate on the resulting mask to imitate motion blur| 
 | dd | real object depth, m |
 
-Note that only a few generated features are used for classifier training, the rest is useful for debugging on the stage of features evaluation.
+**Note!**
+ - only a few generated features are used for classifier training, the rest is useful for debugging on the stage of features evaluation
+ - if an object has intersections with the frame border this object is filtered out.
 ## 4. Generate noises
 Pass the path to generated features (step 3.3) as CL argument and run the script to generate noises.
 
