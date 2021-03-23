@@ -148,7 +148,7 @@ def generate_features(o_key, conf, save_q, stop_event):
             continue
         basic_params = t2d.calc_second_point(basic_params)  # Calculate opposite rectangle point and add it to array
 
-        if tdata.is_crossing_margin(f_margins, basic_params):  # Filter objects intersecting frame border
+        if tdata.is_crossing_margin(f_margins, basic_params) and not args.show:  # Filter objects intersecting frame border
             continue
 
         # Select row with maximal contour area and add dimension

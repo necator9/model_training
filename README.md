@@ -136,8 +136,17 @@ For example:
 The output of this script is a `csv` file containing noises features for classifier training.
 
 ## 5. Evaluate feature distribution
-Use the `eval_notebooks/eval_acc.ipynb` (jupyter-notebook) to plot the generated features. 
+Use the `eval_notebooks/show_features.ipynb` (jupyter-notebook) to plot the generated features. 
 Make sure that features for all the required classes are represented in plots. 
+
+### 5.1 Troubleshooting
+If some classes are not shown in plots `eval_notebooks/show_features.ipynb` it is possible to visualize how the images are rendered:
+- limit amount of generated scenes by narrowing the config (e.g. `scenes/test_3`)
+- add `--show` option when running script for feature generation:
+  ```text
+  ./feat_gen.py scenes/test_3.yml --show
+  ```
+
 
 ## 6. Train the logistic regression classifier
 Pass the path to generated features and noises as CL arguments and run the script.
